@@ -18,7 +18,6 @@ import (
 	"strings"
 
 	"github.com/juju/errors"
-	rterms "github.com/juju/romulus/api/terms"
 	"gopkg.in/macaroon-bakery.v1/httpbakery"
 
 	"github.com/juju/terms-client/api/wireformat"
@@ -39,13 +38,13 @@ type Client interface {
 
 	// GetUnsignedTerms checks for agreements to the specified terms
 	// and returns all terms that the user has not agreed to.
-	GetUnsignedTerms(*rterms.CheckAgreementsRequest) ([]rterms.GetTermsResponse, error)
+	GetUnsignedTerms(*wireformat.CheckAgreementsRequest) ([]wireformat.GetTermsResponse, error)
 
 	// SaveAgreement saves the users agreement to the specified terms (revision must always be specified).
-	SaveAgreement(*rterms.SaveAgreements) (*rterms.SaveAgreementResponses, error)
+	SaveAgreement(*wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error)
 
 	// GetUsersAgreements returns all agreements the user (the user making the request) has made.
-	GetUsersAgreements() ([]rterms.AgreementResponse, error)
+	GetUsersAgreements() ([]wireformat.AgreementResponse, error)
 
 	// Publish publishes the owned term identified by input parameters
 	// and returns the published term id.
@@ -87,19 +86,11 @@ func NewClient(options ...ClientOption) (Client, error) {
 	for _, option := range options {
 		option(c)
 	}
-	rterms.BaseURL = c.serviceURL + "/v1"
-	rclient, err := rterms.NewClient(rterms.HTTPClient(c.bclient))
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	c.rclient = rclient
-
 	return c, nil
 }
 
 type client struct {
 	serviceURL string
-	rclient    rterms.Client
 	bclient    httpClient
 }
 
@@ -249,21 +240,101 @@ func (c *client) SaveTerm(owner, name, content string) (string, error) {
 
 // GetUsersAgreements implements the Client interface. It returns all
 // agreements the user (the user making the request) has made.
-func (c *client) GetUsersAgreements() ([]rterms.AgreementResponse, error) {
-	return c.rclient.GetUsersAgreements()
+func (c *client) GetUsersAgreements() ([]wireformat.AgreementResponse, error) {
+	u := fmt.Sprintf("%s/v1/agreements", getBaseURL())
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	response, err := c.bclient.Do(req)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	if response.StatusCode != http.StatusOK {
+		b, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return nil, errors.Errorf("failed to get signed agreements: %v", response.Status)
+		}
+		return nil, errors.Errorf("failed to get signed agreements: %v: %s", response.Status, string(b))
+	}
+	defer discardClose(response)
+
+	var results []wireformat.AgreementResponse
+	dec := json.NewDecoder(response.Body)
+	err = dec.Decode(&results)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	return results, nil
 }
 
 // SaveAgreement implements the Client interface. It saves the users
 // agreement to the specified term (revision must always be specified).
-func (c *client) SaveAgreement(agreements *rterms.SaveAgreements) (*rterms.SaveAgreementResponses, error) {
-	return c.rclient.SaveAgreement(agreements)
+func (c *client) SaveAgreement(agreements *wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error) {
+	u := fmt.Sprintf("%s/v1/agreement", getBaseURL())
+	req, err := http.NewRequest("POST", u, nil)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	data, err := json.Marshal(agreements)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	response, err := c.bclient.DoWithBody(req, bytes.NewReader(data))
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	if response.StatusCode != http.StatusOK {
+		b, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return nil, errors.Errorf("failed to save agreement: %v", response.Status)
+		}
+		return nil, errors.Errorf("failed to save agreement: %v: %s", response.Status, string(b))
+	}
+	defer discardClose(response)
+	var results wireformat.SaveAgreementResponses
+	dec := json.NewDecoder(response.Body)
+	err = dec.Decode(&results)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	return &results, nil
 }
 
 // GetUnsignedTerms implements the Client interface. It checks for agreements
 // to the specified terms and returns all terms that the user has not agreed
 // to.
-func (c *client) GetUnsignedTerms(terms *rterms.CheckAgreementsRequest) ([]rterms.GetTermsResponse, error) {
-	return c.rclient.GetUnsignedTerms(terms)
+func (c *client) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) ([]wireformat.GetTermsResponse, error) {
+	values := url.Values{}
+	for _, t := range terms.Terms {
+		values.Add("Terms", t)
+	}
+	u := fmt.Sprintf("%s/v1/agreement?%s", getBaseURL(), values.Encode())
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	response, err := c.bclient.Do(req)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	if response.StatusCode != http.StatusOK {
+		b, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return nil, errors.Errorf("failed to get unsigned terms: %v", response.Status)
+		}
+		return nil, errors.Errorf("failed to get unsigned terms: %v: %s", response.Status, string(b))
+	}
+	defer discardClose(response)
+	var results []wireformat.GetTermsResponse
+	dec := json.NewDecoder(response.Body)
+	err = dec.Decode(&results)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	return results, nil
 }
 
 func getBaseURL() string {

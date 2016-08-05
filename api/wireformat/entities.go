@@ -138,3 +138,51 @@ type CheckResult struct {
 	// status check took to run.
 	Duration time.Duration `json:"duration"`
 }
+
+// GetTermsResponse holds the response of the GetTerms call.
+type GetTermsResponse struct {
+	Name      string    `json:"name" yaml:"name"`
+	Owner     string    `json:"owner,omitempty" yaml:"owner,omitempty"`
+	Title     string    `json:"title" yaml:"title"`
+	Revision  int       `json:"revision" yaml:"revision"`
+	CreatedOn time.Time `json:"created-on" yaml:"createdon"`
+	Content   string    `json:"content" yaml:"content"`
+}
+
+// CheckAgreementsRequest holds a slice of terms and the /v1/agreement
+// endpoint will check if the user has agreed to the specified terms
+// and return a slice of terms the user has not agreed to yet.
+type CheckAgreementsRequest struct {
+	Terms []string
+}
+
+// SaveAgreements holds the parameters for creating new
+// user agreements to one or more specific revisions of terms.
+type SaveAgreements struct {
+	Agreements []SaveAgreement `json:"agreements"`
+}
+
+// SaveAgreement holds the parameters for creating a new
+// user agreement to a specific revision of terms.
+type SaveAgreement struct {
+	TermOwner    string `json:"termowner"`
+	TermName     string `json:"termname"`
+	TermRevision int    `json:"termrevision"`
+}
+
+// SaveAgreementResponses holds the response of the SaveAgreement
+// call.
+type SaveAgreementResponses struct {
+	Agreements []AgreementResponse `json:"agreements"`
+}
+
+// AgreementResponse holds the a single agreement made by
+// the user to a specific revision of terms and conditions
+// document.
+type AgreementResponse struct {
+	User      string    `json:"user" yaml:"user"`
+	Owner     string    `json:"owner,omitempty" yaml:"owner,omitempty"`
+	Term      string    `json:"term" yaml:"term"`
+	Revision  int       `json:"revision" yaml:"revision"`
+	CreatedOn time.Time `json:"created-on" yaml:"createdon"`
+}

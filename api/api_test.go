@@ -12,7 +12,6 @@ import (
 	stdtesting "testing"
 	"time"
 
-	"github.com/juju/romulus/api/terms"
 	"github.com/juju/testing"
 	jc "github.com/juju/testing/checkers"
 	gc "gopkg.in/check.v1"
@@ -202,7 +201,7 @@ func (s *apiSuite) TestUnsignedTerms(c *gc.C) {
 		Content:  "universal terms doc content",
 	},
 	})
-	missingAgreements, err := s.client.GetUnsignedTerms(&terms.CheckAgreementsRequest{
+	missingAgreements, err := s.client.GetUnsignedTerms(&wireformat.CheckAgreementsRequest{
 		Terms: []string{
 			"hello-world-terms/1",
 			"hello-universe-terms/1",
@@ -216,16 +215,16 @@ func (s *apiSuite) TestUnsignedTerms(c *gc.C) {
 	c.Assert(missingAgreements[1].Name, gc.Equals, "hello-universe-terms")
 	c.Assert(missingAgreements[1].Revision, gc.Equals, 1)
 	c.Assert(missingAgreements[1].Content, gc.Equals, "universal terms doc content")
-	s.httpClient.SetBody(c, terms.SaveAgreementResponses{
-		Agreements: []terms.AgreementResponse{{
+	s.httpClient.SetBody(c, wireformat.SaveAgreementResponses{
+		Agreements: []wireformat.AgreementResponse{{
 			User:     "test-user",
 			Term:     "hello-world-terms",
 			Revision: 1,
 		}}},
 	)
 
-	p1 := terms.SaveAgreements{
-		Agreements: []terms.SaveAgreement{{
+	p1 := wireformat.SaveAgreements{
+		Agreements: []wireformat.SaveAgreement{{
 			TermName:     "hello-world-terms",
 			TermRevision: 1,
 		}},
@@ -241,7 +240,7 @@ func (s *apiSuite) TestUnsignedTerms(c *gc.C) {
 func (s *apiSuite) TestNotFoundError(c *gc.C) {
 	s.httpClient.status = http.StatusNotFound
 	s.httpClient.body = []byte("something failed")
-	_, err := s.client.GetUnsignedTerms(&terms.CheckAgreementsRequest{
+	_, err := s.client.GetUnsignedTerms(&wireformat.CheckAgreementsRequest{
 		Terms: []string{
 			"hello-world-terms/1",
 			"hello-universe-terms/1",
@@ -256,7 +255,7 @@ func (s *apiSuite) TestSignedAgreementsEnvTermsURL(c *gc.C) {
 
 	t := time.Now().UTC()
 	s.httpClient.status = http.StatusOK
-	s.httpClient.SetBody(c, []terms.AgreementResponse{
+	s.httpClient.SetBody(c, []wireformat.AgreementResponse{
 		{
 			User:      "test-user",
 			Term:      "hello-world-terms",
@@ -273,7 +272,7 @@ func (s *apiSuite) TestSignedAgreementsEnvTermsURL(c *gc.C) {
 	_, err := s.client.GetUsersAgreements()
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(s.httpClient.Calls(), gc.HasLen, 1)
-	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/agreements")
+	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/v1/agreements")
 }
 
 func (s *apiSuite) TestUnsignedTermsEnvTermsURL(c *gc.C) {
@@ -281,7 +280,7 @@ func (s *apiSuite) TestUnsignedTermsEnvTermsURL(c *gc.C) {
 	defer cleanup()
 
 	s.httpClient.status = http.StatusOK
-	s.httpClient.SetBody(c, []terms.GetTermsResponse{
+	s.httpClient.SetBody(c, []wireformat.GetTermsResponse{
 		{
 			Name:     "hello-world-terms",
 			Revision: 1,
@@ -293,7 +292,7 @@ func (s *apiSuite) TestUnsignedTermsEnvTermsURL(c *gc.C) {
 			Content:  "universal terms doc content",
 		},
 	})
-	_, err := s.client.GetUnsignedTerms(&terms.CheckAgreementsRequest{
+	_, err := s.client.GetUnsignedTerms(&wireformat.CheckAgreementsRequest{
 		Terms: []string{
 			"hello-world-terms/1",
 			"hello-universe-terms/1",
@@ -301,7 +300,7 @@ func (s *apiSuite) TestUnsignedTermsEnvTermsURL(c *gc.C) {
 	})
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(s.httpClient.Calls(), gc.HasLen, 1)
-	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/agreement?Terms=hello-world-terms%2F1&Terms=hello-universe-terms%2F1")
+	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/v1/agreement?Terms=hello-world-terms%2F1&Terms=hello-universe-terms%2F1")
 	s.httpClient.ResetCalls()
 }
 
@@ -310,9 +309,9 @@ func (s *apiSuite) TestSaveAgreementEnvTermsURL(c *gc.C) {
 	defer cleanup()
 
 	s.httpClient.status = http.StatusOK
-	s.httpClient.SetBody(c, terms.SaveAgreementResponses{})
-	p1 := terms.SaveAgreements{
-		Agreements: []terms.SaveAgreement{{
+	s.httpClient.SetBody(c, wireformat.SaveAgreementResponses{})
+	p1 := wireformat.SaveAgreements{
+		Agreements: []wireformat.SaveAgreement{{
 			TermName:     "hello-world-terms",
 			TermRevision: 1,
 		}},
@@ -320,7 +319,7 @@ func (s *apiSuite) TestSaveAgreementEnvTermsURL(c *gc.C) {
 	_, err := s.client.SaveAgreement(&p1)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(s.httpClient.Calls(), gc.HasLen, 1)
-	s.httpClient.CheckCall(c, 0, "DoWithBody", "http://example.com/agreement")
+	s.httpClient.CheckCall(c, 0, "DoWithBody", "http://example.com/v1/agreement")
 }
 
 type mockHttpClient struct {
