@@ -10,7 +10,6 @@ import (
 
 	"github.com/juju/cmd/cmdtesting"
 	"github.com/juju/errors"
-	rterms "github.com/juju/romulus/api/terms"
 	jujutesting "github.com/juju/testing"
 	jc "github.com/juju/testing/checkers"
 	gc "gopkg.in/check.v1"
@@ -318,23 +317,23 @@ func (c *mockClient) GetTerm(owner, name string, revision int) (*wireformat.Term
 
 // SaveAgreement saves user's agreement to the specified
 // revision of the Terms and Conditions document.s
-func (c *mockClient) SaveAgreement(agreements *rterms.SaveAgreements) (*rterms.SaveAgreementResponses, error) {
+func (c *mockClient) SaveAgreement(agreements *wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error) {
 	c.AddCall("SaveAgreement", agreements)
-	responses := make([]rterms.AgreementResponse, len(agreements.Agreements))
+	responses := make([]wireformat.AgreementResponse, len(agreements.Agreements))
 	for i, agreement := range agreements.Agreements {
-		responses[i] = rterms.AgreementResponse{
+		responses[i] = wireformat.AgreementResponse{
 			User:     c.user,
 			Owner:    agreement.TermOwner,
 			Term:     agreement.TermName,
 			Revision: agreement.TermRevision,
 		}
 	}
-	return &rterms.SaveAgreementResponses{Agreements: responses}, nil
+	return &wireformat.SaveAgreementResponses{Agreements: responses}, nil
 }
 
-func (c *mockClient) GetUnsignedTerms(terms *rterms.CheckAgreementsRequest) ([]rterms.GetTermsResponse, error) {
+func (c *mockClient) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) ([]wireformat.GetTermsResponse, error) {
 	c.MethodCall(c, "GetUnunsignedTerms", terms)
-	r := make([]rterms.GetTermsResponse, len(c.unsignedTerms))
+	r := make([]wireformat.GetTermsResponse, len(c.unsignedTerms))
 	for i, term := range c.terms {
 		r[i].Owner = term.Owner
 		r[i].Name = term.Name

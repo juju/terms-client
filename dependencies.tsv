@@ -7,7 +7,6 @@ github.com/juju/gojsonschema	git	e1ad140384f254c82f89450d9a7c8dd38a632838	2015-0
 github.com/juju/httprequest	git	796aaafaf712f666df58d31a482c51233038bf9f	2016-05-03T15:03:27Z
 github.com/juju/loggo	git	8477fc936adf0e382d680310047ca27e128a309a	2015-05-27T03:58:39Z
 github.com/juju/persistent-cookiejar	git	e710b897c13ca52828ca2fc9769465186fd6d15c	2016-03-31T17:12:27Z
-github.com/juju/romulus	git	a29c18a92223edb2728d929347a1e6b85b3c1a55	2016-07-22T09:03:45Z
 github.com/juju/schema	git	075de04f9b7d7580d60a1e12a0b3f50bb18e6998	2016-04-20T04:42:03Z
 github.com/juju/testing	git	ccf839b5a07a7a05009f8fa3ec41cd05fb2e0b08	2016-06-24T20:35:24Z
 github.com/juju/utils	git	6219812829a3542c827c76cc75f416d4e6c94335	2016-07-08T10:00:56Z
