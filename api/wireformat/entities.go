@@ -117,6 +117,21 @@ func (t *TimeRFC3339) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// UnmarshalYAML implements the yaml.Unmarshaler interface.
+func (t *TimeRFC3339) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var data string
+	err := unmarshal(&data)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	t0, err := time.Parse(time.RFC3339, data)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	*t = TimeRFC3339(t0)
+	return nil
+}
+
 // DebugStatusResponse contains results of various checks that
 // form the status of the terms service.
 type DebugStatusResponse struct {
