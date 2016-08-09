@@ -32,6 +32,10 @@ func Test(t *stdtesting.T) {
 var _ = gc.Suite(&apiSuite{})
 
 func (s *apiSuite) SetUpTest(c *gc.C) {
+	s.newClient(c)
+}
+
+func (s *apiSuite) newClient(c *gc.C) {
 	s.httpClient = &mockHttpClient{}
 	var err error
 	s.client, err = api.NewClient(api.HTTPClient(s.httpClient))
@@ -252,6 +256,7 @@ func (s *apiSuite) TestNotFoundError(c *gc.C) {
 func (s *apiSuite) TestSignedAgreementsEnvTermsURL(c *gc.C) {
 	cleanup := testing.PatchEnvironment("JUJU_TERMS", "http://example.com")
 	defer cleanup()
+	s.newClient(c)
 
 	t := time.Now().UTC()
 	s.httpClient.status = http.StatusOK
@@ -278,6 +283,7 @@ func (s *apiSuite) TestSignedAgreementsEnvTermsURL(c *gc.C) {
 func (s *apiSuite) TestUnsignedTermsEnvTermsURL(c *gc.C) {
 	cleanup := testing.PatchEnvironment("JUJU_TERMS", "http://example.com")
 	defer cleanup()
+	s.newClient(c)
 
 	s.httpClient.status = http.StatusOK
 	s.httpClient.SetBody(c, []wireformat.GetTermsResponse{
@@ -307,6 +313,7 @@ func (s *apiSuite) TestUnsignedTermsEnvTermsURL(c *gc.C) {
 func (s *apiSuite) TestSaveAgreementEnvTermsURL(c *gc.C) {
 	cleanup := testing.PatchEnvironment("JUJU_TERMS", "http://example.com")
 	defer cleanup()
+	s.newClient(c)
 
 	s.httpClient.status = http.StatusOK
 	s.httpClient.SetBody(c, wireformat.SaveAgreementResponses{})

@@ -23,7 +23,7 @@ import (
 	"github.com/juju/terms-client/api/wireformat"
 )
 
-const baseURL = "https://api.jujucharms.com/terms"
+var BaseURL = "https://api.jujucharms.com/terms"
 
 // Client represents the interface of the terms service client ap client apii.
 type Client interface {
@@ -241,7 +241,7 @@ func (c *client) SaveTerm(owner, name, content string) (string, error) {
 // GetUsersAgreements implements the Client interface. It returns all
 // agreements the user (the user making the request) has made.
 func (c *client) GetUsersAgreements() ([]wireformat.AgreementResponse, error) {
-	u := fmt.Sprintf("%s/v1/agreements", getBaseURL())
+	u := fmt.Sprintf("%s/v1/agreements", c.serviceURL)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -270,14 +270,14 @@ func (c *client) GetUsersAgreements() ([]wireformat.AgreementResponse, error) {
 
 // SaveAgreement implements the Client interface. It saves the users
 // agreement to the specified term (revision must always be specified).
-func (c *client) SaveAgreement(agreements *wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error) {
-	u := fmt.Sprintf("%s/v1/agreement", getBaseURL())
+func (c *client) SaveAgreement(request *wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error) {
+	u := fmt.Sprintf("%s/v1/agreement", c.serviceURL)
 	req, err := http.NewRequest("POST", u, nil)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	data, err := json.Marshal(agreements)
+	data, err := json.Marshal(request.Agreements)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -310,7 +310,7 @@ func (c *client) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) ([]w
 	for _, t := range terms.Terms {
 		values.Add("Terms", t)
 	}
-	u := fmt.Sprintf("%s/v1/agreement?%s", getBaseURL(), values.Encode())
+	u := fmt.Sprintf("%s/v1/agreement?%s", c.serviceURL, values.Encode())
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -338,7 +338,7 @@ func (c *client) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) ([]w
 }
 
 func getBaseURL() string {
-	baseURL := baseURL
+	baseURL := BaseURL
 	if termsURL := os.Getenv("JUJU_TERMS"); termsURL != "" {
 		baseURL = termsURL
 	}
