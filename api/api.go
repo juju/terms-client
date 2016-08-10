@@ -290,7 +290,14 @@ func (c *client) SaveAgreement(request *wireformat.SaveAgreements) (*wireformat.
 		if err != nil {
 			return nil, errors.Errorf("failed to save agreement: %v", response.Status)
 		}
-		return nil, errors.Errorf("failed to save agreement: %v: %s", response.Status, string(b))
+		var e struct {
+			Error string `json:"error"`
+			Code  string `json:"code"`
+		}
+		if err = json.Unmarshal(b, &e); err != nil {
+			return nil, errors.Errorf("%v: %s", response.Status, string(b))
+		}
+		return nil, errors.Errorf("failed to save agreement: %v: %s", e.Code, e.Error)
 	}
 	defer discardClose(response)
 	var results wireformat.SaveAgreementResponses
