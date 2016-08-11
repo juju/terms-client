@@ -28,6 +28,7 @@ func (t *SaveTerm) Validate() error {
 
 // Term contains the terms and conditions document structure.
 type Term struct {
+	Id        string      `json:"id" yaml:"id"`
 	Owner     string      `json:"owner,omitempty" yaml:"owner,omitempty"`
 	Name      string      `json:"name" yaml:"name"`
 	Revision  int         `json:"revision" yaml:"revision"`

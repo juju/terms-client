@@ -104,6 +104,7 @@ func (s *commandSuite) TestPushTerm(c *gc.C) {
 
 func (s *commandSuite) TestShowTerm(c *gc.C) {
 	s.client.setTerms([]wireformat.Term{{
+		Id:       "test-term/1",
 		Name:     "test-term",
 		Revision: 1,
 		Content:  testTermsAndConditions,
@@ -117,13 +118,14 @@ func (s *commandSuite) TestShowTerm(c *gc.C) {
 	}{{
 		about: "everything works",
 		args:  []string{"test-term/1", "--format", "json"},
-		stdout: `{"name":"test-term","revision":1,"created-on":"0001-01-01T00:00:00Z","published":false,"content":"Test Terms and Conditions"}
+		stdout: `{"id":"test-term/1","name":"test-term","revision":1,"created-on":"0001-01-01T00:00:00Z","published":false,"content":"Test Terms and Conditions"}
 `,
 		apiCall: []interface{}{"", "test-term", 1},
 	}, {
 		about: "everything works in yaml",
 		args:  []string{"test-term/1", "--format", "yaml"},
-		stdout: `name: test-term
+		stdout: `id: test-term/1
+name: test-term
 revision: 1
 createdon: 0001-01-01T00:00:00Z
 published: false
@@ -137,7 +139,7 @@ content: Test Terms and Conditions
 	}, {
 		about: "get latest version",
 		args:  []string{"test-term", "--format", "json"},
-		stdout: `{"name":"test-term","revision":1,"created-on":"0001-01-01T00:00:00Z","published":false,"content":"Test Terms and Conditions"}
+		stdout: `{"id":"test-term/1","name":"test-term","revision":1,"created-on":"0001-01-01T00:00:00Z","published":false,"content":"Test Terms and Conditions"}
 `,
 		apiCall: []interface{}{"", "test-term", 0},
 	}, {
@@ -170,6 +172,7 @@ content: Test Terms and Conditions
 
 func (s *commandSuite) TestShowTermsWithOwners(c *gc.C) {
 	s.client.setTerms([]wireformat.Term{{
+		Id:       "owner/test-term/1",
 		Owner:    "owner",
 		Name:     "test-term",
 		Revision: 1,
@@ -184,19 +187,20 @@ func (s *commandSuite) TestShowTermsWithOwners(c *gc.C) {
 	}{{
 		about: "everything works - with owner",
 		args:  []string{"test-owner/test-term/1", "--format", "json"},
-		stdout: `{"owner":"owner","name":"test-term","revision":1,"created-on":"0001-01-01T00:00:00Z","published":false,"content":"Test Terms and Conditions"}
+		stdout: `{"id":"owner/test-term/1","owner":"owner","name":"test-term","revision":1,"created-on":"0001-01-01T00:00:00Z","published":false,"content":"Test Terms and Conditions"}
 `,
 		apiCall: []interface{}{"test-owner", "test-term", 1},
 	}, {
 		about: "parse owner/term-name",
 		args:  []string{"test-owner/abc", "--format", "json"},
-		stdout: `{"owner":"owner","name":"test-term","revision":1,"created-on":"0001-01-01T00:00:00Z","published":false,"content":"Test Terms and Conditions"}
+		stdout: `{"id":"owner/test-term/1","owner":"owner","name":"test-term","revision":1,"created-on":"0001-01-01T00:00:00Z","published":false,"content":"Test Terms and Conditions"}
 `,
 		apiCall: []interface{}{"test-owner", "abc", 0},
 	}, {
 		about: "everything works with owners in yaml",
 		args:  []string{"owner/test-term/1", "--format", "yaml"},
-		stdout: `owner: owner
+		stdout: `id: owner/test-term/1
+owner: owner
 name: test-term
 revision: 1
 createdon: 0001-01-01T00:00:00Z
