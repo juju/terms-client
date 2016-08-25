@@ -36,12 +36,13 @@ push-term text.txt user/enterprise-plan
    file text.txt and the name enterprise-plan and 
    returns the revision of the created document.
 `
+const pushTermPurpose = "create new Terms and Conditions document (revision)"
 
 // NewPushTermCommand returns a new command that can be
 // used to create new (revisions) of Terms and
 // Conditions documents.
-func NewPushTermCommand() *pushTermCommand {
-	return &pushTermCommand{}
+func NewPushTermCommand() cmd.Command {
+	return WrapPlugin(&pushTermCommand{})
 }
 
 // pushTermCommand creates a new Terms and Conditions document.
@@ -66,7 +67,7 @@ func (c *pushTermCommand) Info() *cmd.Info {
 	return &cmd.Info{
 		Name:    "push-term",
 		Args:    "<filename> <term id>",
-		Purpose: "create new Terms and Conditions document (revision)",
+		Purpose: pushTermPurpose,
 		Doc:     pushTermDoc,
 	}
 }
@@ -86,6 +87,11 @@ func (c *pushTermCommand) Init(args []string) error {
 	c.TermID = id
 	c.TermFilename = fn
 	return nil
+}
+
+// Description returns a one-line description of the command.
+func (c *pushTermCommand) Description() string {
+	return pushTermPurpose
 }
 
 // Run implements Command.Run.

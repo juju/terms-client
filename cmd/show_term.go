@@ -24,11 +24,12 @@ show-term enterprise-plan/1
 show-term enterprise-plan
    shows the latest revision of the enterprise plan Terms and Conditions.   
 `
+const showTermPurpose = "shows the specified term"
 
 // NewShowTermCommand returns a new command that can be used
 // to shows Terms and Conditions document.
-func NewShowTermCommand() *showTermCommand {
-	return &showTermCommand{}
+func NewShowTermCommand() cmd.Command {
+	return WrapPlugin(&showTermCommand{})
 }
 
 type showTermCommand struct {
@@ -51,7 +52,7 @@ func (c *showTermCommand) Info() *cmd.Info {
 	return &cmd.Info{
 		Name:    "show-term",
 		Args:    "<term id>",
-		Purpose: "shows the specified term",
+		Purpose: showTermPurpose,
 		Doc:     showTermDoc,
 	}
 }
@@ -68,6 +69,11 @@ func (c *showTermCommand) Init(args []string) error {
 	}
 
 	return nil
+}
+
+// Description returns a one-line description of the command.
+func (c *showTermCommand) Description() string {
+	return showTermPurpose
 }
 
 // Run implements Command.Run.

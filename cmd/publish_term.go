@@ -21,12 +21,13 @@ publish-term is used to publish a Terms and Conditions document.
 Examples
 publish-term me/my-terms
 `
+const publishTermPurpose = "publishes the given terms document"
 
 // NewPublishTermCommand returns a new command that can be
 // used to publish existing owner terms
 // Conditions documents.
-func NewPublishTermCommand() *publishTermCommand {
-	return &publishTermCommand{}
+func NewPublishTermCommand() cmd.Command {
+	return WrapPlugin(&publishTermCommand{})
 }
 
 type publishTermCommand struct {
@@ -49,9 +50,14 @@ func (c *publishTermCommand) Info() *cmd.Info {
 	return &cmd.Info{
 		Name:    "publish-term",
 		Args:    "<term id>",
-		Purpose: "publishes the given terms document",
+		Purpose: publishTermPurpose,
 		Doc:     publishTermDoc,
 	}
+}
+
+// Description returns a one-line description of the command.
+func (c *publishTermCommand) Description() string {
+	return publishTermPurpose
 }
 
 // Init reads and verifies the arguments.
