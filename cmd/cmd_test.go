@@ -244,10 +244,10 @@ func (s *commandSuite) TestPublishTerm(c *gc.C) {
 		apiCall []interface{}
 	}{{
 		about: "everything works",
-		args:  []string{"owner/test-term", "--format", "json"},
+		args:  []string{"owner/test-term/1", "--format", "json"},
 		stdout: `"owner/name/1"
 `,
-		apiCall: []interface{}{"owner", "test-term", 0},
+		apiCall: []interface{}{"owner", "test-term", 1},
 	}, {
 		about: "unknown args",
 		args:  []string{"test-term", "unknown", "args"},
@@ -256,6 +256,10 @@ func (s *commandSuite) TestPublishTerm(c *gc.C) {
 		about: "missing args",
 		args:  []string{},
 		err:   "missing arguments",
+	}, {
+		about: "missing revision",
+		args:  []string{"owner/test-term/0"},
+		err:   `must specify a term revision`,
 	},
 	}
 	for i, test := range tests {

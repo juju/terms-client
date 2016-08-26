@@ -95,6 +95,9 @@ func (c *publishTermCommand) Run(ctx *cmd.Context) error {
 		c.out.Write(ctx, "only terms with owners require publishing")
 		return nil
 	}
+	if termsId.Revision == 0 {
+		return errors.New("must specify a term revision")
+	}
 
 	response, err := termsClient.Publish(
 		termsId.Owner,
