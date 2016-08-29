@@ -8,6 +8,14 @@ import (
 
 	"github.com/juju/cmd"
 	"launchpad.net/gnuflag"
+
+	"github.com/juju/terms-client/api"
+)
+
+var (
+	clientNew = func(options ...api.ClientOption) (api.Client, error) {
+		return api.NewClient(options...)
+	}
 )
 
 type commandWithDescription interface {

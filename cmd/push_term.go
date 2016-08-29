@@ -20,13 +20,7 @@ import (
 	"github.com/juju/terms-client/api"
 )
 
-var (
-	defaultTermServiceLocation = "http://localhost:8081"
-	readFile                   = ioutil.ReadFile
-	clientNew                  = func(options ...api.ClientOption) (api.Client, error) {
-		return api.NewClient(options...)
-	}
-)
+var readFile = ioutil.ReadFile
 
 const pushTermDoc = `
 push-term is used to create a new Terms and Conditions document.
@@ -57,8 +51,6 @@ type pushTermCommand struct {
 
 // SetFlags implements Command.SetFlags.
 func (c *pushTermCommand) SetFlags(f *gnuflag.FlagSet) {
-	// TODO (mattyw) Replace with JUJU_TERMS
-	f.StringVar(&c.TermsServiceLocation, "url", defaultTermServiceLocation, "url of the terms service")
 	c.out.AddFlags(f, "yaml", cmd.DefaultFormatters)
 }
 
@@ -74,6 +66,7 @@ func (c *pushTermCommand) Info() *cmd.Info {
 
 // Init read and verifies the arguments.
 func (c *pushTermCommand) Init(args []string) error {
+	c.TermsServiceLocation = api.BaseURL()
 	if len(args) < 2 {
 		return errors.New("missing arguments")
 	}
