@@ -40,8 +40,6 @@ type publishTermCommand struct {
 
 // SetFlags implements Command.SetFlags.
 func (c *publishTermCommand) SetFlags(f *gnuflag.FlagSet) {
-	// TODO (mattyw) JUJU_TERMS
-	f.StringVar(&c.TermsServiceLocation, "url", defaultTermServiceLocation, "url of the terms service")
 	c.out.AddFlags(f, "yaml", cmd.DefaultFormatters)
 }
 
@@ -62,6 +60,7 @@ func (c *publishTermCommand) Description() string {
 
 // Init reads and verifies the arguments.
 func (c *publishTermCommand) Init(args []string) error {
+	c.TermsServiceLocation = api.BaseURL()
 	if len(args) < 1 {
 		return errors.New("missing arguments")
 	}

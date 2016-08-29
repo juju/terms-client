@@ -23,7 +23,7 @@ import (
 	"github.com/juju/terms-client/api/wireformat"
 )
 
-var BaseURL = "https://api.jujucharms.com/terms"
+var defaultURL = "https://api.jujucharms.com/terms"
 
 // Client represents the interface of the terms service client ap client apii.
 type Client interface {
@@ -80,7 +80,7 @@ func ServiceURL(serviceURL string) ClientOption {
 func NewClient(options ...ClientOption) (Client, error) {
 	bakeryClient := httpbakery.NewClient()
 	c := &client{
-		serviceURL: getBaseURL(),
+		serviceURL: BaseURL(),
 		bclient:    bakeryClient,
 	}
 	for _, option := range options {
@@ -344,8 +344,8 @@ func (c *client) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) ([]w
 	return results, nil
 }
 
-func getBaseURL() string {
-	baseURL := BaseURL
+func BaseURL() string {
+	baseURL := defaultURL
 	if termsURL := os.Getenv("JUJU_TERMS"); termsURL != "" {
 		baseURL = termsURL
 	}
