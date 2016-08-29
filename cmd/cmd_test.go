@@ -228,9 +228,9 @@ content: Test Terms and Conditions
 }
 
 func (s *commandSuite) TestPublishOwnerlessTerm(c *gc.C) {
-	ctx, err := cmdtesting.RunCommand(c, cmd.NewPublishTermCommand(), "test-term/1")
+	ctx, err := cmdtesting.RunCommand(c, cmd.NewReleaseTermCommand(), "test-term/1")
 	c.Assert(err, jc.ErrorIsNil)
-	c.Assert(cmdtesting.Stdout(ctx), gc.Equals, `only terms with owners require publishing
+	c.Assert(cmdtesting.Stdout(ctx), gc.Equals, `only terms with owners require releasing
 `)
 	s.client.CheckNoCalls(c)
 }
@@ -261,7 +261,7 @@ func (s *commandSuite) TestPublishTerm(c *gc.C) {
 	for i, test := range tests {
 		s.client.ResetCalls()
 		c.Logf("running test %d: %s", i, test.about)
-		ctx, err := cmdtesting.RunCommand(c, cmd.NewPublishTermCommand(), test.args...)
+		ctx, err := cmdtesting.RunCommand(c, cmd.NewReleaseTermCommand(), test.args...)
 		if test.err != "" {
 			c.Assert(err, gc.ErrorMatches, test.err)
 		} else {
