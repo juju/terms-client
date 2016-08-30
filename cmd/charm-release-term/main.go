@@ -17,7 +17,7 @@ func main() {
 		fmt.Printf("failed to get command context: %v\n", err)
 		os.Exit(2)
 	}
-	c := tcmd.NewPublishTermCommand()
+	c := tcmd.NewReleaseTermCommand()
 	args := os.Args
 	os.Exit(cmd.Main(c, ctx, args[1:]))
 }

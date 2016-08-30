@@ -17,20 +17,20 @@ import (
 )
 
 const publishTermDoc = `
-publish-term is used to publish a Terms and Conditions document.
+release-term is used to release a Terms and Conditions document.
 Examples
-publish-term me/my-terms
+release-term me/my-terms
 `
-const publishTermPurpose = "publishes the given terms document"
+const publishTermPurpose = "releases the given terms document"
 
-// NewPublishTermCommand returns a new command that can be
+// NewReleaseTermCommand returns a new command that can be
 // used to publish existing owner terms
 // Conditions documents.
-func NewPublishTermCommand() cmd.Command {
-	return WrapPlugin(&publishTermCommand{})
+func NewReleaseTermCommand() cmd.Command {
+	return WrapPlugin(&releaseTermCommand{})
 }
 
-type publishTermCommand struct {
+type releaseTermCommand struct {
 	cmd.CommandBase
 	out cmd.Output
 
@@ -39,14 +39,14 @@ type publishTermCommand struct {
 }
 
 // SetFlags implements Command.SetFlags.
-func (c *publishTermCommand) SetFlags(f *gnuflag.FlagSet) {
+func (c *releaseTermCommand) SetFlags(f *gnuflag.FlagSet) {
 	c.out.AddFlags(f, "yaml", cmd.DefaultFormatters)
 }
 
 // Info implements Command.Info.
-func (c *publishTermCommand) Info() *cmd.Info {
+func (c *releaseTermCommand) Info() *cmd.Info {
 	return &cmd.Info{
-		Name:    "publish-term",
+		Name:    "release-term",
 		Args:    "<term id>",
 		Purpose: publishTermPurpose,
 		Doc:     publishTermDoc,
@@ -54,12 +54,12 @@ func (c *publishTermCommand) Info() *cmd.Info {
 }
 
 // Description returns a one-line description of the command.
-func (c *publishTermCommand) Description() string {
+func (c *releaseTermCommand) Description() string {
 	return publishTermPurpose
 }
 
 // Init reads and verifies the arguments.
-func (c *publishTermCommand) Init(args []string) error {
+func (c *releaseTermCommand) Init(args []string) error {
 	c.TermsServiceLocation = api.BaseURL()
 	if len(args) < 1 {
 		return errors.New("missing arguments")
@@ -72,7 +72,7 @@ func (c *publishTermCommand) Init(args []string) error {
 }
 
 // Run implements Command.Run.
-func (c *publishTermCommand) Run(ctx *cmd.Context) error {
+func (c *releaseTermCommand) Run(ctx *cmd.Context) error {
 	jar, err := cookiejar.New(&cookiejar.Options{
 		Filename: cookieFile(),
 	})
@@ -97,7 +97,7 @@ func (c *publishTermCommand) Run(ctx *cmd.Context) error {
 		return errors.Annotate(err, "invalid term format")
 	}
 	if termsId.Owner == "" {
-		c.out.Write(ctx, "only terms with owners require publishing")
+		c.out.Write(ctx, "only terms with owners require releasing")
 		return nil
 	}
 
