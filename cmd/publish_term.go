@@ -100,6 +100,9 @@ func (c *releaseTermCommand) Run(ctx *cmd.Context) error {
 		c.out.Write(ctx, "only terms with owners require releasing")
 		return nil
 	}
+	if termsId.Revision == 0 {
+		return errors.New("must specify a term revision")
+	}
 
 	response, err := termsClient.Publish(
 		termsId.Owner,
