@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/juju/cmd"
-	"launchpad.net/gnuflag"
+	"github.com/juju/gnuflag"
 
 	"github.com/juju/terms-client/api"
 )
