@@ -122,6 +122,11 @@ func (s *commandSuite) TestShowTerm(c *gc.C) {
 `,
 		apiCall: []interface{}{"", "test-term", 1},
 	}, {
+		about:   "everything works for content",
+		args:    []string{"test-term/1", "--content"},
+		stdout:  `Test Terms and Conditions`,
+		apiCall: []interface{}{"", "test-term", 1},
+	}, {
 		about: "everything works in yaml",
 		args:  []string{"test-term/1", "--format", "yaml"},
 		stdout: `id: test-term/1

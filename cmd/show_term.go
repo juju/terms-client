@@ -38,11 +38,13 @@ type showTermCommand struct {
 
 	TermID               string
 	TermsServiceLocation string
+	ShowContent          bool
 }
 
 // SetFlags implements Command.SetFlags.
 func (c *showTermCommand) SetFlags(f *gnuflag.FlagSet) {
 	c.out.AddFlags(f, "yaml", cmd.DefaultFormatters)
+	f.BoolVar(&c.ShowContent, "content", false, "show term contents")
 }
 
 // Info implements Command.Info.
@@ -105,7 +107,11 @@ func (c *showTermCommand) Run(ctx *cmd.Context) error {
 		return errors.Trace(err)
 	}
 
-	err = c.out.Write(ctx, response)
+	if c.ShowContent {
+		_, err = ctx.Stdout.Write([]byte(response.Content))
+	} else {
+		err = c.out.Write(ctx, response)
+	}
 	if err != nil {
 		return errors.Trace(err)
 	}
