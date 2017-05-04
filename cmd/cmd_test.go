@@ -13,6 +13,7 @@ import (
 	jujutesting "github.com/juju/testing"
 	jc "github.com/juju/testing/checkers"
 	gc "gopkg.in/check.v1"
+	"gopkg.in/macaroon-bakery.v1/httpbakery"
 
 	"github.com/juju/terms-client/api"
 	"github.com/juju/terms-client/api/wireformat"
@@ -28,19 +29,40 @@ var _ = gc.Suite(&commandSuite{})
 var testTermsAndConditions = "Test Terms and Conditions"
 
 type commandSuite struct {
-	client *mockClient
+	client    *mockClient
+	idmClient *mockIDMClient
+	cleanup   func()
 }
 
 func (s *commandSuite) SetUpTest(c *gc.C) {
 	s.client = &mockClient{}
+	s.idmClient = &mockIDMClient{
+		username: "test-user",
+		groups: map[string][]string{
+			"test-user": []string{"test-user"},
+		},
+	}
 
-	jujutesting.PatchValue(cmd.ClientNew, func(...api.ClientOption) (api.Client, error) {
+	c1 := jujutesting.PatchValue(cmd.ClientNew, func(...api.ClientOption) (api.Client, error) {
 		return s.client, nil
 	})
 
-	jujutesting.PatchValue(cmd.ReadFile, func(string) ([]byte, error) {
+	c2 := jujutesting.PatchValue(cmd.ReadFile, func(string) ([]byte, error) {
 		return []byte(testTermsAndConditions), nil
 	})
+
+	c3 := jujutesting.PatchValue(cmd.NewIDMClient, func(_ string, _ *httpbakery.Client) cmd.IDMClient {
+		return s.idmClient
+	})
+	s.cleanup = func() {
+		c1()
+		c2()
+		c3()
+	}
+}
+
+func (s *commandSuite) TearDownTest(c *gc.C) {
+	s.cleanup()
 }
 
 func (s *commandSuite) TestPushTerm(c *gc.C) {
@@ -140,7 +162,7 @@ content: Test Terms and Conditions
 	}, {
 		about: "cannot parse revision number",
 		args:  []string{"owner/test-term/abc", "--format", "json"},
-		err:   `invalid term format: invalid revision number "abc" strconv.ParseInt: parsing "abc": invalid syntax`,
+		err:   `invalid term format: invalid revision number "abc" strconv.Atoi: parsing "abc": invalid syntax`,
 	}, {
 		about: "get latest version",
 		args:  []string{"test-term", "--format", "json"},
@@ -285,6 +307,68 @@ func (s *commandSuite) TestPublishTerm(c *gc.C) {
 	}
 }
 
+func (s *commandSuite) TestListTerms(c *gc.C) {
+	s.client.setTerms([]wireformat.Term{{
+		Id:       "test-user/test-term/1",
+		Owner:    "test-user",
+		Name:     "test-term",
+		Revision: 1,
+		Content:  testTermsAndConditions,
+	}})
+	tests := []struct {
+		about            string
+		declaredUsername string
+		args             []string
+		err              string
+		stdout           string
+		apiCalls         []jujutesting.StubCall
+	}{{
+		about:            "everything works",
+		declaredUsername: "test-user",
+		args:             []string{},
+		stdout: `- test-user/test-term/1
+`,
+		apiCalls: []jujutesting.StubCall{
+			{FuncName: "GetTermsByOwner", Args: []interface{}{"test-user"}},
+		},
+	}, {
+		about:            "unknown user",
+		declaredUsername: "test-unknown-user",
+		args:             []string{},
+		err:              "user not found",
+	}, {
+		about:            "test private groups",
+		declaredUsername: "test-user",
+		args:             []string{"--groups", "private-group1, private-group2"},
+		stdout: `- test-user/test-term/1
+- test-user/test-term/1
+- test-user/test-term/1
+`,
+		apiCalls: []jujutesting.StubCall{
+			{FuncName: "GetTermsByOwner", Args: []interface{}{"private-group1"}},
+			{FuncName: "GetTermsByOwner", Args: []interface{}{"private-group2"}},
+			{FuncName: "GetTermsByOwner", Args: []interface{}{"test-user"}},
+		},
+	}}
+	for i, test := range tests {
+		s.client.ResetCalls()
+		s.idmClient.username = test.declaredUsername
+		c.Logf("running test %d: %s", i, test.about)
+		ctx, err := cmdtesting.RunCommand(c, cmd.NewListTermsCommand(), test.args...)
+		if test.err != "" {
+			c.Assert(err, gc.ErrorMatches, test.err)
+		} else {
+			c.Assert(err, jc.ErrorIsNil)
+		}
+		if ctx != nil {
+			c.Assert(cmdtesting.Stdout(ctx), gc.Equals, test.stdout)
+		}
+		if len(test.apiCalls) > 0 {
+			s.client.CheckCalls(c, test.apiCalls)
+		}
+	}
+}
+
 type mockClient struct {
 	api.Client
 	jujutesting.Stub
@@ -358,4 +442,29 @@ func (c *mockClient) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) 
 func (c *mockClient) Publish(owner, name string, revision int) (string, error) {
 	c.MethodCall(c, "Publish", owner, name, revision)
 	return "owner/name/1", nil
+}
+
+func (c *mockClient) GetTermsByOwner(owner string) ([]wireformat.Term, error) {
+	c.MethodCall(c, "GetTermsByOwner", owner)
+	return c.terms, c.NextErr()
+}
+
+type mockIDMClient struct {
+	jujutesting.Stub
+	username string
+	groups   map[string][]string
+}
+
+func (c *mockIDMClient) WhoAmI() (string, error) {
+	c.MethodCall(c, "WhoAmI")
+	return c.username, c.NextErr()
+}
+
+func (c *mockIDMClient) Groups(username string) ([]string, error) {
+	c.MethodCall(c, "Groups", username)
+	groups, ok := c.groups[username]
+	if !ok {
+		return nil, errors.NotFoundf("user")
+	}
+	return groups, c.NextErr()
 }

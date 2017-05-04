@@ -329,6 +329,37 @@ func (s *apiSuite) TestSaveAgreementEnvTermsURL(c *gc.C) {
 	s.httpClient.CheckCall(c, 0, "DoWithBody", "http://example.com/v1/agreement")
 }
 
+func (s *apiSuite) TestGetTermsByOwner(c *gc.C) {
+	t := time.Now().Round(time.Second).UTC()
+	terms := []wireformat.Term{{
+		Name:      "test-term",
+		Owner:     "test-user",
+		Revision:  17,
+		CreatedOn: wireformat.TimeRFC3339(t),
+		Content:   "You hereby agree to run this test.",
+	}}
+	s.httpClient.status = http.StatusOK
+	s.httpClient.SetBody(c, terms)
+	savedTerm, err := s.client.GetTermsByOwner("test-user")
+	c.Assert(err, jc.ErrorIsNil)
+	c.Assert(savedTerm, jc.DeepEquals, terms)
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/g/test-user")
+}
+
+func (s *apiSuite) TestGetTermsByOwnerRequestError(c *gc.C) {
+	s.httpClient.status = http.StatusNotFound
+	s.httpClient.SetBody(c, struct {
+		Code  string `json:"code"`
+		Error string `json:"error"`
+	}{
+		Code:  "not found",
+		Error: "user not found",
+	})
+	_, err := s.client.GetTermsByOwner("test-user")
+	c.Assert(err, gc.ErrorMatches, "user not found")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/g/test-user")
+}
+
 type mockHttpClient struct {
 	testing.Stub
 	status int
