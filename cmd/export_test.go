@@ -4,6 +4,7 @@
 package cmd
 
 var (
-	ClientNew = &clientNew
-	ReadFile  = &readFile
+	ClientNew    = &clientNew
+	ReadFile     = &readFile
+	NewIDMClient = &newIDMClient
 )

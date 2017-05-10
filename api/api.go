@@ -50,6 +50,9 @@ type Client interface {
 	// and returns the published term id.
 	// Only owned terms require publishing.
 	Publish(owner, name string, revision int) (string, error)
+
+	// GetTermsByOwner implements the Client interface. It returns terms owned by the specified owner.
+	GetTermsByOwner(owner string) ([]wireformat.Term, error)
 }
 
 type httpClient interface {
@@ -342,6 +345,36 @@ func (c *client) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) ([]w
 		return nil, errors.Trace(err)
 	}
 	return results, nil
+}
+
+// GetTermsByOwner implements the Client interface. It returns terms owned by the specified owner.
+func (c *client) GetTermsByOwner(owner string) ([]wireformat.Term, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v1/g/%s", c.serviceURL, owner), nil)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	response, err := c.bclient.Do(req)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	defer discardClose(response)
+	data, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	if response.StatusCode != http.StatusOK {
+		message, uerr := unmarshalError(data)
+		if uerr != nil {
+			return nil, errors.New(string(data))
+		}
+		return nil, errors.New(message)
+	}
+	var terms []wireformat.Term
+	err = json.Unmarshal(data, &terms)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	return terms, nil
 }
 
 func BaseURL() string {
