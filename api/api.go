@@ -18,7 +18,7 @@ import (
 	"strings"
 
 	"github.com/juju/errors"
-	"gopkg.in/macaroon-bakery.v1/httpbakery"
+	"gopkg.in/macaroon-bakery.v2-unstable/httpbakery"
 
 	"github.com/juju/terms-client/api/wireformat"
 )
@@ -57,7 +57,6 @@ type Client interface {
 
 type httpClient interface {
 	Do(*http.Request) (*http.Response, error)
-	DoWithBody(req *http.Request, body io.ReadSeeker) (*http.Response, error)
 }
 
 // ClientOption defines a function which configures a Client.
@@ -128,7 +127,7 @@ func (c *client) Publish(owner, name string, revision int) (string, error) {
 		return fail(errors.Trace(err))
 	}
 
-	response, err := c.bclient.DoWithBody(req, nil)
+	response, err := c.bclient.Do(req)
 	if err != nil {
 		return fail(errors.Trace(err))
 	}
@@ -211,13 +210,13 @@ func (c *client) SaveTerm(owner, name, content string) (string, error) {
 		return "", errors.Trace(err)
 	}
 
-	req, err := http.NewRequest("POST", termURL.String(), nil)
+	req, err := http.NewRequest("POST", termURL.String(), bytes.NewReader(data))
 	if err != nil {
 		return "", errors.Trace(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	response, err := c.bclient.DoWithBody(req, bytes.NewReader(data))
+	response, err := c.bclient.Do(req)
 	if err != nil {
 		return "", errors.Trace(err)
 	}
@@ -275,16 +274,17 @@ func (c *client) GetUsersAgreements() ([]wireformat.AgreementResponse, error) {
 // agreement to the specified term (revision must always be specified).
 func (c *client) SaveAgreement(request *wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error) {
 	u := fmt.Sprintf("%s/v1/agreement", c.serviceURL)
-	req, err := http.NewRequest("POST", u, nil)
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
 	data, err := json.Marshal(request.Agreements)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
-	response, err := c.bclient.DoWithBody(req, bytes.NewReader(data))
+
+	req, err := http.NewRequest("POST", u, bytes.NewReader(data))
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	response, err := c.bclient.Do(req)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
