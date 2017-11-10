@@ -15,7 +15,7 @@ import (
 	"github.com/juju/persistent-cookiejar"
 	"github.com/juju/utils"
 	"gopkg.in/juju/charm.v6-unstable"
-	"gopkg.in/macaroon-bakery.v1/httpbakery"
+	"gopkg.in/macaroon-bakery.v2/httpbakery"
 
 	"github.com/juju/terms-client/api"
 )
@@ -113,7 +113,7 @@ func (c *pushTermCommand) Run(ctx *cmd.Context) error {
 	defer jar.Save()
 	bakeryClient := httpbakery.NewClient()
 	bakeryClient.Jar = jar
-	bakeryClient.VisitWebPage = httpbakery.OpenWebBrowser
+	bakeryClient.AddInteractor(httpbakery.WebBrowserInteractor{})
 
 	termsClient, err := clientNew(
 		api.ServiceURL(c.TermsServiceLocation),
