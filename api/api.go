@@ -18,7 +18,7 @@ import (
 	"strings"
 
 	"github.com/juju/errors"
-	"gopkg.in/macaroon-bakery.v2-unstable/httpbakery"
+	"gopkg.in/macaroon-bakery.v2/httpbakery"
 
 	"github.com/juju/terms-client/api/wireformat"
 )
@@ -120,7 +120,7 @@ func (c *client) Publish(owner, name string, revision int) (string, error) {
 	if owner == "" {
 		return fmt.Sprintf("%s/%d", name, revision), nil
 	}
-	termURL := fmt.Sprintf("%s/v1/terms/%s/%s/%d/publish", c.serviceURL, owner, name, revision)
+	termURL := fmt.Sprintf("%s/v2/terms/%s/%s/%d/publish", c.serviceURL, owner, name, revision)
 
 	req, err := http.NewRequest("POST", termURL, nil)
 	if err != nil {
@@ -243,7 +243,7 @@ func (c *client) SaveTerm(owner, name, content string) (string, error) {
 // GetUsersAgreements implements the Client interface. It returns all
 // agreements the user (the user making the request) has made.
 func (c *client) GetUsersAgreements() ([]wireformat.AgreementResponse, error) {
-	u := fmt.Sprintf("%s/v1/agreements", c.serviceURL)
+	u := fmt.Sprintf("%s/v2/agreements", c.serviceURL)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -273,7 +273,7 @@ func (c *client) GetUsersAgreements() ([]wireformat.AgreementResponse, error) {
 // SaveAgreement implements the Client interface. It saves the users
 // agreement to the specified term (revision must always be specified).
 func (c *client) SaveAgreement(request *wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error) {
-	u := fmt.Sprintf("%s/v1/agreement", c.serviceURL)
+	u := fmt.Sprintf("%s/v2/agreement", c.serviceURL)
 	data, err := json.Marshal(request.Agreements)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -320,7 +320,7 @@ func (c *client) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) ([]w
 	for _, t := range terms.Terms {
 		values.Add("Terms", t)
 	}
-	u := fmt.Sprintf("%s/v1/agreement?%s", c.serviceURL, values.Encode())
+	u := fmt.Sprintf("%s/v2/agreement?%s", c.serviceURL, values.Encode())
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -349,7 +349,7 @@ func (c *client) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) ([]w
 
 // GetTermsByOwner implements the Client interface. It returns terms owned by the specified owner.
 func (c *client) GetTermsByOwner(owner string) ([]wireformat.Term, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v1/g/%s", c.serviceURL, owner), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v2/g/%s", c.serviceURL, owner), nil)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -390,7 +390,7 @@ func appendTermURL(baseURLStr, owner, term string, revision int) (*url.URL, erro
 	if err != nil {
 		return nil, errors.Annotatef(err, "cannot parse %q", baseURLStr)
 	}
-	b.Path = strings.TrimSuffix(b.Path, "/") + "/v1/terms"
+	b.Path = strings.TrimSuffix(b.Path, "/") + "/v2/terms"
 	if owner != "" {
 		b.Path = b.Path + "/" + strings.TrimPrefix(owner, "/")
 	}

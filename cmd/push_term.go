@@ -15,7 +15,7 @@ import (
 	"github.com/juju/persistent-cookiejar"
 	"github.com/juju/utils"
 	"gopkg.in/juju/charm.v6-unstable"
-	"gopkg.in/macaroon-bakery.v2-unstable/httpbakery"
+	"gopkg.in/macaroon-bakery.v2/httpbakery"
 
 	"github.com/juju/terms-client/api"
 )

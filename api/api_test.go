@@ -53,7 +53,7 @@ func (s *apiSuite) TestPublish(c *gc.C) {
 	id, err := s.client.Publish("test-owner", "test-term", 17)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(id, gc.Equals, termID.TermID)
-	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/test-owner/test-term/17/publish")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v2/terms/test-owner/test-term/17/publish")
 }
 
 func (s *apiSuite) TestSaveOwnedTerm(c *gc.C) {
@@ -65,7 +65,7 @@ func (s *apiSuite) TestSaveOwnedTerm(c *gc.C) {
 	savedTerm, err := s.client.SaveTerm("owner", "test-term", "You hereby agree to run this test.")
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, term.TermID)
-	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/owner/test-term")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v2/terms/owner/test-term")
 }
 
 func (s *apiSuite) TestSaveOwnerlessTerm(c *gc.C) {
@@ -77,7 +77,7 @@ func (s *apiSuite) TestSaveOwnerlessTerm(c *gc.C) {
 	savedTerm, err := s.client.SaveTerm("", "test-term", "You hereby agree to run this test.")
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, term.TermID)
-	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/test-term")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v2/terms/test-term")
 }
 
 func (s *apiSuite) TestSaveTermError(c *gc.C) {
@@ -103,7 +103,7 @@ func (s *apiSuite) TestGetOwnedTermWithRevision(c *gc.C) {
 	savedTerm, err := s.client.GetTerm("owner", "test-term", 17)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, &term[0])
-	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/owner/test-term?revision=17")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v2/terms/owner/test-term?revision=17")
 }
 
 func (s *apiSuite) TestGetOwnedTermWithoutRevision(c *gc.C) {
@@ -120,7 +120,7 @@ func (s *apiSuite) TestGetOwnedTermWithoutRevision(c *gc.C) {
 	savedTerm, err := s.client.GetTerm("owner", "test-term", 0)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, &term[0])
-	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/owner/test-term")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v2/terms/owner/test-term")
 }
 
 func (s *apiSuite) TestGetOwnerlessTermWithRevision(c *gc.C) {
@@ -136,7 +136,7 @@ func (s *apiSuite) TestGetOwnerlessTermWithRevision(c *gc.C) {
 	savedTerm, err := s.client.GetTerm("", "test-term", 17)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, &term[0])
-	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/test-term?revision=17")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v2/terms/test-term?revision=17")
 }
 
 func (s *apiSuite) TestGetOwnerlessTermWithoutRevision(c *gc.C) {
@@ -152,7 +152,7 @@ func (s *apiSuite) TestGetOwnerlessTermWithoutRevision(c *gc.C) {
 	savedTerm, err := s.client.GetTerm("", "test-term", 0)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, &term[0])
-	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/test-term")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v2/terms/test-term")
 }
 
 func (s *apiSuite) TestGetTermError(c *gc.C) {
@@ -276,7 +276,7 @@ func (s *apiSuite) TestSignedAgreementsEnvTermsURL(c *gc.C) {
 	_, err := s.client.GetUsersAgreements()
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(s.httpClient.Calls(), gc.HasLen, 1)
-	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/v1/agreements")
+	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/v2/agreements")
 }
 
 func (s *apiSuite) TestUnsignedTermsEnvTermsURL(c *gc.C) {
@@ -305,7 +305,7 @@ func (s *apiSuite) TestUnsignedTermsEnvTermsURL(c *gc.C) {
 	})
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(s.httpClient.Calls(), gc.HasLen, 1)
-	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/v1/agreement?Terms=hello-world-terms%2F1&Terms=hello-universe-terms%2F1")
+	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/v2/agreement?Terms=hello-world-terms%2F1&Terms=hello-universe-terms%2F1")
 	s.httpClient.ResetCalls()
 }
 
@@ -325,7 +325,7 @@ func (s *apiSuite) TestSaveAgreementEnvTermsURL(c *gc.C) {
 	_, err := s.client.SaveAgreement(&p1)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(s.httpClient.Calls(), gc.HasLen, 1)
-	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/v1/agreement")
+	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/v2/agreement")
 }
 
 func (s *apiSuite) TestGetTermsByOwner(c *gc.C) {
@@ -342,7 +342,7 @@ func (s *apiSuite) TestGetTermsByOwner(c *gc.C) {
 	savedTerm, err := s.client.GetTermsByOwner("test-user")
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, terms)
-	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/g/test-user")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v2/g/test-user")
 }
 
 func (s *apiSuite) TestGetTermsByOwnerRequestError(c *gc.C) {
@@ -356,7 +356,7 @@ func (s *apiSuite) TestGetTermsByOwnerRequestError(c *gc.C) {
 	})
 	_, err := s.client.GetTermsByOwner("test-user")
 	c.Assert(err, gc.ErrorMatches, "user not found")
-	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/g/test-user")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v2/g/test-user")
 }
 
 type mockHttpClient struct {
