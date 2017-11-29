@@ -36,7 +36,7 @@ const pushTermPurpose = "create new Terms and Conditions document (revision)"
 // used to create new (revisions) of Terms and
 // Conditions documents.
 func NewPushTermCommand() cmd.Command {
-	return WrapPlugin(&pushTermCommand{})
+	return &pushTermCommand{}
 }
 
 // pushTermCommand creates a new Terms and Conditions document.

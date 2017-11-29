@@ -27,7 +27,7 @@ const publishTermPurpose = "releases the given terms document"
 // used to publish existing owner terms
 // Conditions documents.
 func NewReleaseTermCommand() cmd.Command {
-	return WrapPlugin(&releaseTermCommand{})
+	return &releaseTermCommand{}
 }
 
 type releaseTermCommand struct {
