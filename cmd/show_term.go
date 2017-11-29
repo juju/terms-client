@@ -29,7 +29,7 @@ const showTermPurpose = "shows the specified term"
 // NewShowTermCommand returns a new command that can be used
 // to shows Terms and Conditions document.
 func NewShowTermCommand() cmd.Command {
-	return WrapPlugin(&showTermCommand{})
+	return &showTermCommand{}
 }
 
 type showTermCommand struct {

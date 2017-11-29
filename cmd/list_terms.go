@@ -38,7 +38,7 @@ list-terms --groups test-group1,test-group2
 // NewListTermsCommand returns a new command that can be used
 // to list owned Terms and Conditions documents.
 func NewListTermsCommand() cmd.Command {
-	return WrapPlugin(&listTermsCommand{})
+	return &listTermsCommand{}
 }
 
 type listTermsCommand struct {
