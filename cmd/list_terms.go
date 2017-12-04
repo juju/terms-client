@@ -22,7 +22,7 @@ import (
 
 const (
 	listTermsDoc = `
-list-terms show a list of "Terms and Conditions" documents owned by you
+list-terms shows a list of "Terms and Conditions" documents owned by you
 or one of the public groups you belong to.
 Examples
 list-terms --groups test-group1,test-group2
@@ -30,7 +30,7 @@ list-terms --groups test-group1,test-group2
    to one of the test-group1 and test-group2, which you must belong to, but may
    not be public.
 `
-	listTermsPurpose = "list owned terms"
+	listTermsPurpose = "list terms owned by the current user"
 
 	defaultIDMURL = "https://api.jujucharms.com/identity/v1"
 )
@@ -58,7 +58,7 @@ func (c *listTermsCommand) SetFlags(f *gnuflag.FlagSet) {
 // Info implements Command.Info.
 func (c *listTermsCommand) Info() *cmd.Info {
 	return &cmd.Info{
-		Name:    "list-terms",
+		Name:    "terms",
 		Purpose: listTermsPurpose,
 		Doc:     listTermsDoc,
 	}
