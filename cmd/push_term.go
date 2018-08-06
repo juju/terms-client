@@ -4,23 +4,21 @@
 package cmd
 
 import (
-	"io/ioutil"
-	"os"
-	"path"
 	"strings"
 
 	"github.com/juju/cmd"
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
-	"github.com/juju/persistent-cookiejar"
-	"github.com/juju/utils"
 	"gopkg.in/juju/charm.v6-unstable"
-	"gopkg.in/macaroon-bakery.v1/httpbakery"
 
 	"github.com/juju/terms-client/api"
 )
 
-var readFile = ioutil.ReadFile
+var (
+	clientNew = func(options ...api.ClientOption) (api.Client, error) {
+		return api.NewClient(options...)
+	}
+)
 
 const pushTermDoc = `
 push-term is used to create a new Terms and Conditions document.
@@ -41,17 +39,17 @@ func NewPushTermCommand() cmd.Command {
 
 // pushTermCommand creates a new Terms and Conditions document.
 type pushTermCommand struct {
-	cmd.CommandBase
+	baseCommand
 	out cmd.Output
 
-	TermID               string
-	TermFilename         string
-	TermsServiceLocation string
+	TermID       string
+	TermFilename string
 }
 
 // SetFlags implements Command.SetFlags.
 func (c *pushTermCommand) SetFlags(f *gnuflag.FlagSet) {
 	c.out.AddFlags(f, "yaml", cmd.DefaultFormatters)
+	c.baseCommand.SetFlags(f)
 }
 
 // Info implements Command.Info.
@@ -66,7 +64,6 @@ func (c *pushTermCommand) Info() *cmd.Info {
 
 // Init read and verifies the arguments.
 func (c *pushTermCommand) Init(args []string) error {
-	c.TermsServiceLocation = api.BaseURL()
 	if len(args) < 2 {
 		return errors.New("missing arguments")
 	}
@@ -104,19 +101,12 @@ func (c *pushTermCommand) Run(ctx *cmd.Context) error {
 		return errors.Annotatef(err, "could not read contents of %q", c.TermFilename)
 	}
 
-	jar, err := cookiejar.New(&cookiejar.Options{
-		Filename: cookieFile(),
-	})
+	bakeryClient, cleanup, err := c.NewClient(ctx)
 	if err != nil {
 		return errors.Trace(err)
 	}
-	defer jar.Save()
-	bakeryClient := httpbakery.NewClient()
-	bakeryClient.Jar = jar
-	bakeryClient.VisitWebPage = httpbakery.OpenWebBrowser
-
+	defer cleanup()
 	termsClient, err := clientNew(
-		api.ServiceURL(c.TermsServiceLocation),
 		api.HTTPClient(bakeryClient),
 	)
 	if err != nil {
@@ -137,14 +127,4 @@ func (c *pushTermCommand) Run(ctx *cmd.Context) error {
 		return errors.Trace(err)
 	}
 	return nil
-}
-
-// cookieFile returns the path to the cookie used to store authorization
-// macaroons. The returned value can be overridden by setting the
-// JUJU_COOKIEFILE environment variable.
-func cookieFile() string {
-	if file := os.Getenv("JUJU_COOKIEFILE"); file != "" {
-		return file
-	}
-	return path.Join(utils.Home(), ".go-cookies")
 }
