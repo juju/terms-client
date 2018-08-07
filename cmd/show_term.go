@@ -9,9 +9,7 @@ import (
 	"github.com/juju/cmd"
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
-	"github.com/juju/persistent-cookiejar"
 	"gopkg.in/juju/charm.v6-unstable"
-	"gopkg.in/macaroon-bakery.v1/httpbakery"
 
 	"github.com/juju/terms-client/api"
 )
@@ -33,18 +31,18 @@ func NewShowTermCommand() cmd.Command {
 }
 
 type showTermCommand struct {
-	cmd.CommandBase
+	baseCommand
 	out cmd.Output
 
-	TermID               string
-	TermsServiceLocation string
-	ShowContent          bool
+	TermID      string
+	ShowContent bool
 }
 
 // SetFlags implements Command.SetFlags.
 func (c *showTermCommand) SetFlags(f *gnuflag.FlagSet) {
 	c.out.AddFlags(f, "yaml", cmd.DefaultFormatters)
-	f.BoolVar(&c.ShowContent, "content", false, "show term contents")
+	f.BoolVar(&c.ShowContent, "content", false, "show term contents only")
+	c.baseCommand.SetFlags(f)
 }
 
 // Info implements Command.Info.
@@ -59,7 +57,6 @@ func (c *showTermCommand) Info() *cmd.Info {
 
 // Init reads and verifies the arguments.
 func (c *showTermCommand) Init(args []string) error {
-	c.TermsServiceLocation = api.BaseURL()
 	if len(args) < 1 {
 		return errors.New("missing arguments")
 	}
@@ -79,24 +76,18 @@ func (c *showTermCommand) Description() string {
 
 // Run implements Command.Run.
 func (c *showTermCommand) Run(ctx *cmd.Context) error {
-	jar, err := cookiejar.New(&cookiejar.Options{
-		Filename: cookieFile(),
-	})
+	bakeryClient, cleanup, err := c.NewClient(ctx)
 	if err != nil {
 		return errors.Trace(err)
 	}
-	defer jar.Save()
-	bakeryClient := httpbakery.NewClient()
-	bakeryClient.Jar = jar
-	bakeryClient.VisitWebPage = httpbakery.OpenWebBrowser
-
+	defer cleanup()
 	termsClient, err := clientNew(
-		api.ServiceURL(c.TermsServiceLocation),
 		api.HTTPClient(bakeryClient),
 	)
 	if err != nil {
 		return errors.Trace(err)
 	}
+
 	termsId, err := charm.ParseTerm(c.TermID)
 	if err != nil {
 		return errors.Annotate(err, "invalid term format")

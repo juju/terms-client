@@ -14,7 +14,6 @@ import (
 	"github.com/juju/cmd"
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
-	"github.com/juju/persistent-cookiejar"
 	"gopkg.in/macaroon-bakery.v1/httpbakery"
 
 	"github.com/juju/terms-client/api"
@@ -42,17 +41,19 @@ func NewListTermsCommand() cmd.Command {
 }
 
 type listTermsCommand struct {
-	cmd.CommandBase
+	baseCommand
 	out cmd.Output
 
-	GroupList            string
-	TermsServiceLocation string
+	IdentityURL string
+	GroupList   string
 }
 
 // SetFlags implements Command.SetFlags.
 func (c *listTermsCommand) SetFlags(f *gnuflag.FlagSet) {
 	c.out.AddFlags(f, "yaml", cmd.DefaultFormatters)
 	f.StringVar(&c.GroupList, "groups", "", "a comma separated list of additional groups")
+	f.StringVar(&c.IdentityURL, "identity-url", idmBaseURL(), "host and port of the identity service")
+	c.baseCommand.SetFlags(f)
 }
 
 // Info implements Command.Info.
@@ -66,12 +67,9 @@ func (c *listTermsCommand) Info() *cmd.Info {
 
 // Init reads and verifies the arguments.
 func (c *listTermsCommand) Init(args []string) error {
-	c.TermsServiceLocation = api.BaseURL()
-
 	if err := cmd.CheckEmpty(args); err != nil {
 		return errors.Errorf("unknown arguments: %v", strings.Join(args[1:], ","))
 	}
-
 	return nil
 }
 
@@ -82,18 +80,19 @@ func (c *listTermsCommand) Description() string {
 
 // Run implements Command.Run.
 func (c *listTermsCommand) Run(ctx *cmd.Context) error {
-	jar, err := cookiejar.New(&cookiejar.Options{
-		Filename: cookieFile(),
-	})
+	bakeryClient, cleanup, err := c.NewClient(ctx)
 	if err != nil {
 		return errors.Trace(err)
 	}
-	defer jar.Save()
-	bakeryClient := httpbakery.NewClient()
-	bakeryClient.Jar = jar
-	bakeryClient.VisitWebPage = httpbakery.OpenWebBrowser
+	defer cleanup()
+	termsClient, err := clientNew(
+		api.HTTPClient(bakeryClient),
+	)
+	if err != nil {
+		return errors.Trace(err)
+	}
 
-	idmClient := newIDMClient(idmBaseURL(), bakeryClient)
+	idmClient := newIDMClient(c.IdentityURL, bakeryClient)
 
 	// first we perform a whoami request
 	username, err := idmClient.WhoAmI()
@@ -125,14 +124,6 @@ func (c *listTermsCommand) Run(ctx *cmd.Context) error {
 		i++
 	}
 	sort.Strings(groupSlice)
-
-	termsClient, err := clientNew(
-		api.ServiceURL(c.TermsServiceLocation),
-		api.HTTPClient(bakeryClient),
-	)
-	if err != nil {
-		return errors.Trace(err)
-	}
 
 	terms := []string{}
 	for _, groupName := range groupSlice {
@@ -221,7 +212,7 @@ func (c *idmClient) Groups(username string) ([]string, error) {
 
 func idmBaseURL() string {
 	baseURL := defaultIDMURL
-	if idmURL := os.Getenv("IDM_URL"); idmURL != "" {
+	if idmURL := os.Getenv("JUJU_IDENTITY"); idmURL != "" {
 		baseURL = idmURL
 	}
 	return baseURL
