@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"strings"
 
 	"github.com/juju/cmd"
@@ -93,7 +94,7 @@ func (c *showTermCommand) Run(ctx *cmd.Context) error {
 		return errors.Annotate(err, "invalid term format")
 	}
 
-	response, err := termsClient.GetTerm(termsId.Owner, termsId.Name, termsId.Revision)
+	response, err := termsClient.GetTerm(context.Background(), termsId.Owner, termsId.Name, termsId.Revision)
 	if err != nil {
 		return errors.Trace(err)
 	}

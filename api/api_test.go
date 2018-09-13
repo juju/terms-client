@@ -5,6 +5,7 @@ package api_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -42,6 +43,23 @@ func (s *apiSuite) newClient(c *gc.C) {
 	c.Assert(err, jc.ErrorIsNil)
 }
 
+func (s *apiSuite) TestContext(c *gc.C) {
+	termID := struct {
+		TermID string `json:"term-id"`
+	}{
+		TermID: "test-owner/test-term/17",
+	}
+	s.httpClient.status = http.StatusOK
+	s.httpClient.SetBody(c, termID)
+
+	ctx := context.WithValue(context.Background(), "X-Request-ID", "test-id")
+
+	id, err := s.client.Publish(ctx, "test-owner", "test-term", 17)
+	c.Assert(err, jc.ErrorIsNil)
+	c.Assert(id, gc.Equals, termID.TermID)
+	s.httpClient.CheckCall(c, 0, "DoWithBody", "https://api.jujucharms.com/terms/v1/terms/test-owner/test-term/17/publish", "test-id")
+}
+
 func (s *apiSuite) TestPublish(c *gc.C) {
 	termID := struct {
 		TermID string `json:"term-id"`
@@ -51,7 +69,7 @@ func (s *apiSuite) TestPublish(c *gc.C) {
 	s.httpClient.status = http.StatusOK
 	s.httpClient.SetBody(c, termID)
 
-	id, err := s.client.Publish("test-owner", "test-term", 17)
+	id, err := s.client.Publish(context.Background(), "test-owner", "test-term", 17)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(id, gc.Equals, termID.TermID)
 	s.httpClient.CheckCall(c, 0, "DoWithBody", "https://api.jujucharms.com/terms/v1/terms/test-owner/test-term/17/publish")
@@ -63,7 +81,7 @@ func (s *apiSuite) TestSaveOwnedTerm(c *gc.C) {
 	}
 	s.httpClient.status = http.StatusOK
 	s.httpClient.SetBody(c, term)
-	savedTerm, err := s.client.SaveTerm("owner", "test-term", "You hereby agree to run this test.")
+	savedTerm, err := s.client.SaveTerm(context.Background(), "owner", "test-term", "You hereby agree to run this test.")
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, term.TermID)
 	s.httpClient.CheckCall(c, 0, "DoWithBody", "https://api.jujucharms.com/terms/v1/terms/owner/test-term")
@@ -75,7 +93,7 @@ func (s *apiSuite) TestSaveOwnerlessTerm(c *gc.C) {
 	}
 	s.httpClient.status = http.StatusOK
 	s.httpClient.SetBody(c, term)
-	savedTerm, err := s.client.SaveTerm("", "test-term", "You hereby agree to run this test.")
+	savedTerm, err := s.client.SaveTerm(context.Background(), "", "test-term", "You hereby agree to run this test.")
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, term.TermID)
 	s.httpClient.CheckCall(c, 0, "DoWithBody", "https://api.jujucharms.com/terms/v1/terms/test-term")
@@ -86,7 +104,7 @@ func (s *apiSuite) TestSaveTermError(c *gc.C) {
 	s.httpClient.SetBody(c, struct {
 		Error string `json:"error"`
 	}{"silly internal error"})
-	_, err := s.client.SaveTerm("", "test-term", "You hereby agree to run this test.")
+	_, err := s.client.SaveTerm(context.Background(), "", "test-term", "You hereby agree to run this test.")
 	c.Assert(err, gc.ErrorMatches, "silly internal error")
 }
 
@@ -101,7 +119,7 @@ func (s *apiSuite) TestGetOwnedTermWithRevision(c *gc.C) {
 	}}
 	s.httpClient.status = http.StatusOK
 	s.httpClient.SetBody(c, term)
-	savedTerm, err := s.client.GetTerm("owner", "test-term", 17)
+	savedTerm, err := s.client.GetTerm(context.Background(), "owner", "test-term", 17)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, &term[0])
 	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/owner/test-term?revision=17")
@@ -118,7 +136,7 @@ func (s *apiSuite) TestGetOwnedTermWithoutRevision(c *gc.C) {
 	}}
 	s.httpClient.status = http.StatusOK
 	s.httpClient.SetBody(c, term)
-	savedTerm, err := s.client.GetTerm("owner", "test-term", 0)
+	savedTerm, err := s.client.GetTerm(context.Background(), "owner", "test-term", 0)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, &term[0])
 	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/owner/test-term")
@@ -134,7 +152,7 @@ func (s *apiSuite) TestGetOwnerlessTermWithRevision(c *gc.C) {
 	}}
 	s.httpClient.status = http.StatusOK
 	s.httpClient.SetBody(c, term)
-	savedTerm, err := s.client.GetTerm("", "test-term", 17)
+	savedTerm, err := s.client.GetTerm(context.Background(), "", "test-term", 17)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, &term[0])
 	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/test-term?revision=17")
@@ -150,7 +168,7 @@ func (s *apiSuite) TestGetOwnerlessTermWithoutRevision(c *gc.C) {
 	}}
 	s.httpClient.status = http.StatusOK
 	s.httpClient.SetBody(c, term)
-	savedTerm, err := s.client.GetTerm("", "test-term", 0)
+	savedTerm, err := s.client.GetTerm(context.Background(), "", "test-term", 0)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, &term[0])
 	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/test-term")
@@ -161,7 +179,7 @@ func (s *apiSuite) TestGetTermError(c *gc.C) {
 	s.httpClient.SetBody(c, struct {
 		Error string `json:"error"`
 	}{"silly internal error"})
-	_, err := s.client.GetTerm("", "test-term", 17)
+	_, err := s.client.GetTerm(context.Background(), "", "test-term", 17)
 	c.Assert(err, gc.ErrorMatches, "silly internal error")
 }
 
@@ -180,7 +198,7 @@ func (s *apiSuite) TestSignedAgreements(c *gc.C) {
 		CreatedOn: wireformat.TimeRFC3339(t),
 	},
 	})
-	signedAgreements, err := s.client.GetUsersAgreements()
+	signedAgreements, err := s.client.GetUsersAgreements(context.Background())
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(signedAgreements, gc.HasLen, 2)
 	c.Assert(signedAgreements[0].User, gc.Equals, "test-user")
@@ -205,12 +223,15 @@ func (s *apiSuite) TestUnsignedTerms(c *gc.C) {
 		Content:  "universal terms doc content",
 	},
 	})
-	missingAgreements, err := s.client.GetUnsignedTerms(&wireformat.CheckAgreementsRequest{
-		Terms: []string{
-			"hello-world-terms/1",
-			"hello-universe-terms/1",
+	missingAgreements, err := s.client.GetUnsignedTerms(
+		context.Background(),
+		&wireformat.CheckAgreementsRequest{
+			Terms: []string{
+				"hello-world-terms/1",
+				"hello-universe-terms/1",
+			},
 		},
-	})
+	)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(missingAgreements, gc.HasLen, 2)
 	c.Assert(missingAgreements[0].Name, gc.Equals, "hello-world-terms")
@@ -233,7 +254,7 @@ func (s *apiSuite) TestUnsignedTerms(c *gc.C) {
 			TermRevision: 1,
 		}},
 	}
-	response, err := s.client.SaveAgreement(&p1)
+	response, err := s.client.SaveAgreement(context.Background(), &p1)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(response.Agreements, gc.HasLen, 1)
 	c.Assert(response.Agreements[0].User, gc.Equals, "test-user")
@@ -244,12 +265,15 @@ func (s *apiSuite) TestUnsignedTerms(c *gc.C) {
 func (s *apiSuite) TestNotFoundError(c *gc.C) {
 	s.httpClient.status = http.StatusNotFound
 	s.httpClient.body = []byte("something failed")
-	_, err := s.client.GetUnsignedTerms(&wireformat.CheckAgreementsRequest{
-		Terms: []string{
-			"hello-world-terms/1",
-			"hello-universe-terms/1",
+	_, err := s.client.GetUnsignedTerms(
+		context.Background(),
+		&wireformat.CheckAgreementsRequest{
+			Terms: []string{
+				"hello-world-terms/1",
+				"hello-universe-terms/1",
+			},
 		},
-	})
+	)
 	c.Assert(err, gc.ErrorMatches, "failed to get unsigned terms: Not Found: something failed")
 }
 
@@ -274,7 +298,7 @@ func (s *apiSuite) TestSignedAgreementsEnvTermsURL(c *gc.C) {
 			CreatedOn: t,
 		},
 	})
-	_, err := s.client.GetUsersAgreements()
+	_, err := s.client.GetUsersAgreements(context.Background())
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(s.httpClient.Calls(), gc.HasLen, 1)
 	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/v1/agreements")
@@ -298,12 +322,15 @@ func (s *apiSuite) TestUnsignedTermsEnvTermsURL(c *gc.C) {
 			Content:  "universal terms doc content",
 		},
 	})
-	_, err := s.client.GetUnsignedTerms(&wireformat.CheckAgreementsRequest{
-		Terms: []string{
-			"hello-world-terms/1",
-			"hello-universe-terms/1",
+	_, err := s.client.GetUnsignedTerms(
+		context.Background(),
+		&wireformat.CheckAgreementsRequest{
+			Terms: []string{
+				"hello-world-terms/1",
+				"hello-universe-terms/1",
+			},
 		},
-	})
+	)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(s.httpClient.Calls(), gc.HasLen, 1)
 	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/v1/agreement?Terms=hello-world-terms%2F1&Terms=hello-universe-terms%2F1")
@@ -323,7 +350,7 @@ func (s *apiSuite) TestSaveAgreementEnvTermsURL(c *gc.C) {
 			TermRevision: 1,
 		}},
 	}
-	_, err := s.client.SaveAgreement(&p1)
+	_, err := s.client.SaveAgreement(context.Background(), &p1)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(s.httpClient.Calls(), gc.HasLen, 1)
 	s.httpClient.CheckCall(c, 0, "DoWithBody", "http://example.com/v1/agreement")
@@ -340,7 +367,7 @@ func (s *apiSuite) TestGetTermsByOwner(c *gc.C) {
 	}}
 	s.httpClient.status = http.StatusOK
 	s.httpClient.SetBody(c, terms)
-	savedTerm, err := s.client.GetTermsByOwner("test-user")
+	savedTerm, err := s.client.GetTermsByOwner(context.Background(), "test-user")
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, terms)
 	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/g/test-user")
@@ -355,7 +382,7 @@ func (s *apiSuite) TestGetTermsByOwnerRequestError(c *gc.C) {
 		Code:  "not found",
 		Error: "user not found",
 	})
-	_, err := s.client.GetTermsByOwner("test-user")
+	_, err := s.client.GetTermsByOwner(context.Background(), "test-user")
 	c.Assert(err, gc.ErrorMatches, "user not found")
 	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/g/test-user")
 }
@@ -367,7 +394,12 @@ type mockHttpClient struct {
 }
 
 func (m *mockHttpClient) Do(req *http.Request) (*http.Response, error) {
-	m.AddCall("Do", req.URL.String())
+	requestID := req.Header.Get("X-Request-ID")
+	if requestID != "" {
+		m.AddCall("Do", req.URL.String(), requestID)
+	} else {
+		m.AddCall("Do", req.URL.String())
+	}
 	return &http.Response{
 		Status:     http.StatusText(m.status),
 		StatusCode: m.status,
@@ -379,7 +411,12 @@ func (m *mockHttpClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func (m *mockHttpClient) DoWithBody(req *http.Request, body io.ReadSeeker) (*http.Response, error) {
-	m.AddCall("DoWithBody", req.URL.String())
+	requestID := req.Header.Get("X-Request-ID")
+	if requestID != "" {
+		m.AddCall("DoWithBody", req.URL.String(), requestID)
+	} else {
+		m.AddCall("DoWithBody", req.URL.String())
+	}
 	return &http.Response{
 		Status:     http.StatusText(m.status),
 		StatusCode: m.status,

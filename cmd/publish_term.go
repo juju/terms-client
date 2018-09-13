@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"strings"
 
 	"github.com/juju/cmd"
@@ -95,6 +96,7 @@ func (c *releaseTermCommand) Run(ctx *cmd.Context) error {
 	}
 
 	response, err := termsClient.Publish(
+		context.Background(),
 		termsId.Owner,
 		termsId.Name,
 		termsId.Revision,
