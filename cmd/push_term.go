@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"strings"
 
 	"github.com/juju/cmd"
@@ -114,6 +115,7 @@ func (c *pushTermCommand) Run(ctx *cmd.Context) error {
 	}
 
 	response, err := termsClient.SaveTerm(
+		context.Background(),
 		termid.Owner,
 		termid.Name,
 		string(data),

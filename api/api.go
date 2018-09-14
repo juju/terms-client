@@ -7,6 +7,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,29 +31,40 @@ type Client interface {
 	// Saves a Terms and Conditions document under the specified owner/name
 	// and returns a term document with the new revision number
 	// (only term owner, name and revision are returned).
-	SaveTerm(owner, name, content string) (string, error)
+	SaveTerm(ctx context.Context, owner, name, content string) (string, error)
 
 	// GetTerm returns the term that matches the specified criteria.
 	// If revision is 0, it will return the latest revision of the term.
-	GetTerm(owner, name string, revision int) (*wireformat.Term, error)
+	GetTerm(ctx context.Context, owner, name string, revision int) (*wireformat.Term, error)
 
 	// GetUnsignedTerms checks for agreements to the specified terms
 	// and returns all terms that the user has not agreed to.
-	GetUnsignedTerms(*wireformat.CheckAgreementsRequest) ([]wireformat.GetTermsResponse, error)
+	GetUnsignedTerms(context.Context, *wireformat.CheckAgreementsRequest) ([]wireformat.GetTermsResponse, error)
 
 	// SaveAgreement saves the users agreement to the specified terms (revision must always be specified).
-	SaveAgreement(*wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error)
+	SaveAgreement(context.Context, *wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error)
 
 	// GetUsersAgreements returns all agreements the user (the user making the request) has made.
-	GetUsersAgreements() ([]wireformat.AgreementResponse, error)
+	GetUsersAgreements(ctx context.Context) ([]wireformat.AgreementResponse, error)
 
 	// Publish publishes the owned term identified by input parameters
 	// and returns the published term id.
 	// Only owned terms require publishing.
-	Publish(owner, name string, revision int) (string, error)
+	Publish(ctx context.Context, owner, name string, revision int) (string, error)
 
 	// GetTermsByOwner implements the Client interface. It returns terms owned by the specified owner.
-	GetTermsByOwner(owner string) ([]wireformat.Term, error)
+	GetTermsByOwner(ctx context.Context, owner string) ([]wireformat.Term, error)
+}
+
+// headerName is the name of the header the handler will look for in incoming requests.
+const headerName = "X-Request-ID"
+
+func requestWithId(ctx context.Context, req *http.Request) *http.Request {
+	id, ok := ctx.Value(headerName).(string)
+	if ok {
+		req.Header.Set(headerName, id)
+	}
+	return req
 }
 
 type httpClient interface {
@@ -114,7 +126,7 @@ func unmarshalError(data []byte) (string, error) {
 
 // Publish publishes the owned term identified by input parameters
 // and returns the published term id.
-func (c *client) Publish(owner, name string, revision int) (string, error) {
+func (c *client) Publish(ctx context.Context, owner, name string, revision int) (string, error) {
 	fail := func(err error) (string, error) {
 		return "", err
 	}
@@ -127,6 +139,7 @@ func (c *client) Publish(owner, name string, revision int) (string, error) {
 	if err != nil {
 		return fail(errors.Trace(err))
 	}
+	req = requestWithId(ctx, req)
 
 	response, err := c.bclient.DoWithBody(req, nil)
 	if err != nil {
@@ -157,7 +170,7 @@ func (c *client) Publish(owner, name string, revision int) (string, error) {
 // GetTerm implements the Client interface. It returns the term that
 // matches the specified criteria. If revision is 0, it will return the
 // latest revision of the term.
-func (c *client) GetTerm(owner, name string, revision int) (*wireformat.Term, error) {
+func (c *client) GetTerm(ctx context.Context, owner, name string, revision int) (*wireformat.Term, error) {
 	termURL, err := appendTermURL(c.serviceURL, owner, name, revision)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -167,6 +180,8 @@ func (c *client) GetTerm(owner, name string, revision int) (*wireformat.Term, er
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
+	req = requestWithId(ctx, req)
+
 	response, err := c.bclient.Do(req)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -197,7 +212,7 @@ func (c *client) GetTerm(owner, name string, revision int) (*wireformat.Term, er
 // SaveTerm implements the Client interface. It saves a Terms and Conditions document
 // under the specified owner/name and returns a term document with the new revision number
 // (only term owner, name and revision are returned).
-func (c *client) SaveTerm(owner, name, content string) (string, error) {
+func (c *client) SaveTerm(ctx context.Context, owner, name, content string) (string, error) {
 	termURL, err := appendTermURL(c.serviceURL, owner, name, 0)
 	if err != nil {
 		return "", errors.Trace(err)
@@ -216,6 +231,7 @@ func (c *client) SaveTerm(owner, name, content string) (string, error) {
 		return "", errors.Trace(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = requestWithId(ctx, req)
 
 	response, err := c.bclient.DoWithBody(req, bytes.NewReader(data))
 	if err != nil {
@@ -243,12 +259,14 @@ func (c *client) SaveTerm(owner, name, content string) (string, error) {
 
 // GetUsersAgreements implements the Client interface. It returns all
 // agreements the user (the user making the request) has made.
-func (c *client) GetUsersAgreements() ([]wireformat.AgreementResponse, error) {
+func (c *client) GetUsersAgreements(ctx context.Context) ([]wireformat.AgreementResponse, error) {
 	u := fmt.Sprintf("%s/v1/agreements", c.serviceURL)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
+	req = requestWithId(ctx, req)
+
 	response, err := c.bclient.Do(req)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -273,13 +291,15 @@ func (c *client) GetUsersAgreements() ([]wireformat.AgreementResponse, error) {
 
 // SaveAgreement implements the Client interface. It saves the users
 // agreement to the specified term (revision must always be specified).
-func (c *client) SaveAgreement(request *wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error) {
+func (c *client) SaveAgreement(ctx context.Context, request *wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error) {
 	u := fmt.Sprintf("%s/v1/agreement", c.serviceURL)
 	req, err := http.NewRequest("POST", u, nil)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = requestWithId(ctx, req)
+
 	data, err := json.Marshal(request.Agreements)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -315,7 +335,7 @@ func (c *client) SaveAgreement(request *wireformat.SaveAgreements) (*wireformat.
 // GetUnsignedTerms implements the Client interface. It checks for agreements
 // to the specified terms and returns all terms that the user has not agreed
 // to.
-func (c *client) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) ([]wireformat.GetTermsResponse, error) {
+func (c *client) GetUnsignedTerms(ctx context.Context, terms *wireformat.CheckAgreementsRequest) ([]wireformat.GetTermsResponse, error) {
 	values := url.Values{}
 	for _, t := range terms.Terms {
 		values.Add("Terms", t)
@@ -326,6 +346,8 @@ func (c *client) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) ([]w
 		return nil, errors.Trace(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req = requestWithId(ctx, req)
+
 	response, err := c.bclient.Do(req)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -348,11 +370,13 @@ func (c *client) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) ([]w
 }
 
 // GetTermsByOwner implements the Client interface. It returns terms owned by the specified owner.
-func (c *client) GetTermsByOwner(owner string) ([]wireformat.Term, error) {
+func (c *client) GetTermsByOwner(ctx context.Context, owner string) ([]wireformat.Term, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v1/g/%s", c.serviceURL, owner), nil)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
+	req = requestWithId(ctx, req)
+
 	response, err := c.bclient.Do(req)
 	if err != nil {
 		return nil, errors.Trace(err)

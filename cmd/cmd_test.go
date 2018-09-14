@@ -4,6 +4,7 @@
 package cmd_test
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -391,7 +392,7 @@ func (c *mockClient) setUnsignedTerms(t []wireformat.Term) {
 	c.unsignedTerms = t
 }
 
-func (c *mockClient) SaveTerm(owner, name, content string) (string, error) {
+func (c *mockClient) SaveTerm(_ context.Context, owner, name, content string) (string, error) {
 	c.AddCall("SaveTerm", owner, name, content)
 	if owner == "" {
 		return fmt.Sprintf("%s/1", name), nil
@@ -400,7 +401,7 @@ func (c *mockClient) SaveTerm(owner, name, content string) (string, error) {
 }
 
 // GetTerms returns matching Terms and Conditions documents.
-func (c *mockClient) GetTerm(owner, name string, revision int) (*wireformat.Term, error) {
+func (c *mockClient) GetTerm(_ context.Context, owner, name string, revision int) (*wireformat.Term, error) {
 	c.AddCall("GetTerm", owner, name, revision)
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -414,7 +415,7 @@ func (c *mockClient) GetTerm(owner, name string, revision int) (*wireformat.Term
 
 // SaveAgreement saves user's agreement to the specified
 // revision of the Terms and Conditions document.s
-func (c *mockClient) SaveAgreement(agreements *wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error) {
+func (c *mockClient) SaveAgreement(_ context.Context, agreements *wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error) {
 	c.AddCall("SaveAgreement", agreements)
 	responses := make([]wireformat.AgreementResponse, len(agreements.Agreements))
 	for i, agreement := range agreements.Agreements {
@@ -428,7 +429,7 @@ func (c *mockClient) SaveAgreement(agreements *wireformat.SaveAgreements) (*wire
 	return &wireformat.SaveAgreementResponses{Agreements: responses}, nil
 }
 
-func (c *mockClient) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) ([]wireformat.GetTermsResponse, error) {
+func (c *mockClient) GetUnsignedTerms(_ context.Context, terms *wireformat.CheckAgreementsRequest) ([]wireformat.GetTermsResponse, error) {
 	c.MethodCall(c, "GetUnunsignedTerms", terms)
 	r := make([]wireformat.GetTermsResponse, len(c.unsignedTerms))
 	for i, term := range c.terms {
@@ -439,12 +440,12 @@ func (c *mockClient) GetUnsignedTerms(terms *wireformat.CheckAgreementsRequest) 
 	return r, nil
 }
 
-func (c *mockClient) Publish(owner, name string, revision int) (string, error) {
+func (c *mockClient) Publish(_ context.Context, owner, name string, revision int) (string, error) {
 	c.MethodCall(c, "Publish", owner, name, revision)
 	return "owner/name/1", nil
 }
 
-func (c *mockClient) GetTermsByOwner(owner string) ([]wireformat.Term, error) {
+func (c *mockClient) GetTermsByOwner(_ context.Context, owner string) ([]wireformat.Term, error) {
 	c.MethodCall(c, "GetTermsByOwner", owner)
 	return c.terms, c.NextErr()
 }

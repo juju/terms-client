@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -127,7 +128,7 @@ func (c *listTermsCommand) Run(ctx *cmd.Context) error {
 
 	terms := []string{}
 	for _, groupName := range groupSlice {
-		groupTerms, err := termsClient.GetTermsByOwner(groupName)
+		groupTerms, err := termsClient.GetTermsByOwner(context.Background(), groupName)
 		if err != nil {
 			return errors.Trace(err)
 		}
