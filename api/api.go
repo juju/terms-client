@@ -19,7 +19,7 @@ import (
 	"strings"
 
 	"github.com/juju/errors"
-	"gopkg.in/macaroon-bakery.v1/httpbakery"
+	"gopkg.in/macaroon-bakery.v2/httpbakery"
 
 	"github.com/juju/terms-client/api/wireformat"
 )
@@ -69,7 +69,6 @@ func requestWithId(ctx context.Context, req *http.Request) *http.Request {
 
 type httpClient interface {
 	Do(*http.Request) (*http.Response, error)
-	DoWithBody(req *http.Request, body io.ReadSeeker) (*http.Response, error)
 }
 
 // ClientOption defines a function which configures a Client.
@@ -141,7 +140,7 @@ func (c *client) Publish(ctx context.Context, owner, name string, revision int) 
 	}
 	req = requestWithId(ctx, req)
 
-	response, err := c.bclient.DoWithBody(req, nil)
+	response, err := c.bclient.Do(req)
 	if err != nil {
 		return fail(errors.Trace(err))
 	}
@@ -226,14 +225,14 @@ func (c *client) SaveTerm(ctx context.Context, owner, name, content string) (str
 		return "", errors.Trace(err)
 	}
 
-	req, err := http.NewRequest("POST", termURL.String(), nil)
+	req, err := http.NewRequest("POST", termURL.String(), bytes.NewReader(data))
 	if err != nil {
 		return "", errors.Trace(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req = requestWithId(ctx, req)
 
-	response, err := c.bclient.DoWithBody(req, bytes.NewReader(data))
+	response, err := c.bclient.Do(req)
 	if err != nil {
 		return "", errors.Trace(err)
 	}
@@ -293,18 +292,18 @@ func (c *client) GetUsersAgreements(ctx context.Context) ([]wireformat.Agreement
 // agreement to the specified term (revision must always be specified).
 func (c *client) SaveAgreement(ctx context.Context, request *wireformat.SaveAgreements) (*wireformat.SaveAgreementResponses, error) {
 	u := fmt.Sprintf("%s/v1/agreement", c.serviceURL)
-	req, err := http.NewRequest("POST", u, nil)
+	data, err := json.Marshal(request.Agreements)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	req, err := http.NewRequest("POST", u, bytes.NewReader(data))
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req = requestWithId(ctx, req)
 
-	data, err := json.Marshal(request.Agreements)
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	response, err := c.bclient.DoWithBody(req, bytes.NewReader(data))
+	response, err := c.bclient.Do(req)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
