@@ -5,20 +5,18 @@ package cmd
 
 import (
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path"
 
 	"github.com/juju/cmd"
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
-	"github.com/juju/idmclient/ussologin"
 	"github.com/juju/juju/juju/osenv"
-	"github.com/juju/juju/jujuclient"
 	"github.com/juju/persistent-cookiejar"
 	"github.com/juju/utils"
 	"gopkg.in/juju/environschema.v1/form"
-	"gopkg.in/macaroon-bakery.v1/httpbakery"
+	"gopkg.in/juju/idmclient.v1/ussologin"
+	"gopkg.in/macaroon-bakery.v2/httpbakery"
 
 	"github.com/juju/terms-client/api"
 )
@@ -46,19 +44,22 @@ func (s *baseCommand) NewClient(ctx *cmd.Context) (*httpbakery.Client, func(), e
 	}
 	osenv.SetJujuXDGDataHome(jujuXDGDataHome)
 	client := httpbakery.NewClient()
-	filler := &form.IOFiller{
-		In:  os.Stdin,
-		Out: os.Stdout,
-	}
 	if s.NoBrowser {
-		client.VisitWebPage = ussologin.VisitWebPage(
-			"juju",
-			&http.Client{},
-			filler,
-			jujuclient.NewTokenStore(),
-		)
+		filler := &form.IOFiller{
+			In:  os.Stdin,
+			Out: os.Stdout,
+		}
+		store := ussologin.NewFileTokenStore(osenv.JujuXDGDataHomePath("store-usso-token"))
+		interactor := ussologin.NewInteractor(ussologin.StoreTokenGetter{
+			Store: store,
+			TokenGetter: ussologin.FormTokenGetter{
+				Filler: filler,
+				Name:   "juju",
+			},
+		})
+		client.AddInteractor(interactor)
 	} else {
-		client.VisitWebPage = httpbakery.OpenWebBrowser
+		client.AddInteractor(httpbakery.WebBrowserInteractor{})
 	}
 	if jar, err := cookiejar.New(&cookiejar.Options{
 		Filename: cookieFile(),

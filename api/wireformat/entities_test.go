@@ -38,7 +38,7 @@ func (s *wireformatSuite) TestYAML(c *gc.C) {
 owner: test-owner
 term: test-term
 revision: 17
-createdon: 2016-01-02T04:08:16Z
+createdon: "2016-01-02T04:08:16Z"
 `)
 	var agreementOut wireformat.Agreement
 	err = yaml.Unmarshal(data, &agreementOut)

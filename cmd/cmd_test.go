@@ -14,7 +14,7 @@ import (
 	jujutesting "github.com/juju/testing"
 	jc "github.com/juju/testing/checkers"
 	gc "gopkg.in/check.v1"
-	"gopkg.in/macaroon-bakery.v1/httpbakery"
+	"gopkg.in/macaroon-bakery.v2/httpbakery"
 
 	"github.com/juju/terms-client/api"
 	"github.com/juju/terms-client/api/wireformat"
@@ -155,7 +155,7 @@ func (s *commandSuite) TestShowTerm(c *gc.C) {
 		stdout: `id: test-term/1
 name: test-term
 revision: 1
-createdon: 0001-01-01T00:00:00Z
+createdon: "0001-01-01T00:00:00Z"
 published: false
 content: Test Terms and Conditions
 `,
@@ -231,7 +231,7 @@ func (s *commandSuite) TestShowTermsWithOwners(c *gc.C) {
 owner: owner
 name: test-term
 revision: 1
-createdon: 0001-01-01T00:00:00Z
+createdon: "0001-01-01T00:00:00Z"
 published: false
 content: Test Terms and Conditions
 `,

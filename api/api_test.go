@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"net/http"
 	stdtesting "testing"
@@ -57,7 +56,7 @@ func (s *apiSuite) TestContext(c *gc.C) {
 	id, err := s.client.Publish(ctx, "test-owner", "test-term", 17)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(id, gc.Equals, termID.TermID)
-	s.httpClient.CheckCall(c, 0, "DoWithBody", "https://api.jujucharms.com/terms/v1/terms/test-owner/test-term/17/publish", "test-id")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/test-owner/test-term/17/publish", "test-id")
 }
 
 func (s *apiSuite) TestPublish(c *gc.C) {
@@ -72,7 +71,7 @@ func (s *apiSuite) TestPublish(c *gc.C) {
 	id, err := s.client.Publish(context.Background(), "test-owner", "test-term", 17)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(id, gc.Equals, termID.TermID)
-	s.httpClient.CheckCall(c, 0, "DoWithBody", "https://api.jujucharms.com/terms/v1/terms/test-owner/test-term/17/publish")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/test-owner/test-term/17/publish")
 }
 
 func (s *apiSuite) TestSaveOwnedTerm(c *gc.C) {
@@ -84,7 +83,7 @@ func (s *apiSuite) TestSaveOwnedTerm(c *gc.C) {
 	savedTerm, err := s.client.SaveTerm(context.Background(), "owner", "test-term", "You hereby agree to run this test.")
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, term.TermID)
-	s.httpClient.CheckCall(c, 0, "DoWithBody", "https://api.jujucharms.com/terms/v1/terms/owner/test-term")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/owner/test-term")
 }
 
 func (s *apiSuite) TestSaveOwnerlessTerm(c *gc.C) {
@@ -96,7 +95,7 @@ func (s *apiSuite) TestSaveOwnerlessTerm(c *gc.C) {
 	savedTerm, err := s.client.SaveTerm(context.Background(), "", "test-term", "You hereby agree to run this test.")
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(savedTerm, jc.DeepEquals, term.TermID)
-	s.httpClient.CheckCall(c, 0, "DoWithBody", "https://api.jujucharms.com/terms/v1/terms/test-term")
+	s.httpClient.CheckCall(c, 0, "Do", "https://api.jujucharms.com/terms/v1/terms/test-term")
 }
 
 func (s *apiSuite) TestSaveTermError(c *gc.C) {
@@ -353,7 +352,7 @@ func (s *apiSuite) TestSaveAgreementEnvTermsURL(c *gc.C) {
 	_, err := s.client.SaveAgreement(context.Background(), &p1)
 	c.Assert(err, jc.ErrorIsNil)
 	c.Assert(s.httpClient.Calls(), gc.HasLen, 1)
-	s.httpClient.CheckCall(c, 0, "DoWithBody", "http://example.com/v1/agreement")
+	s.httpClient.CheckCall(c, 0, "Do", "http://example.com/v1/agreement")
 }
 
 func (s *apiSuite) TestGetTermsByOwner(c *gc.C) {
@@ -399,23 +398,6 @@ func (m *mockHttpClient) Do(req *http.Request) (*http.Response, error) {
 		m.AddCall("Do", req.URL.String(), requestID)
 	} else {
 		m.AddCall("Do", req.URL.String())
-	}
-	return &http.Response{
-		Status:     http.StatusText(m.status),
-		StatusCode: m.status,
-		Proto:      "HTTP/1.0",
-		ProtoMajor: 1,
-		ProtoMinor: 1,
-		Body:       ioutil.NopCloser(bytes.NewReader(m.body)),
-	}, nil
-}
-
-func (m *mockHttpClient) DoWithBody(req *http.Request, body io.ReadSeeker) (*http.Response, error) {
-	requestID := req.Header.Get("X-Request-ID")
-	if requestID != "" {
-		m.AddCall("DoWithBody", req.URL.String(), requestID)
-	} else {
-		m.AddCall("DoWithBody", req.URL.String())
 	}
 	return &http.Response{
 		Status:     http.StatusText(m.status),
