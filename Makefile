@@ -10,21 +10,23 @@ REAL_GOBIN := $(shell mkdir -p $(GOBIN); realpath $(GOBIN))
 GOBIN := $(REAL_GOBIN)
 endif
 
-godeps: $(GOBIN)/godeps
-	GOBIN=$(GOBIN) $(GOBIN)/godeps -u dependencies.tsv
-
-$(GOBIN)/godeps: $(GOBIN)
-	GOBIN=$(GOBIN) go get github.com/rogpeppe/godeps
-
-ifeq ($(MAKE_GODEPS),true)
-.PHONY: deps
-deps: godeps
+ifeq ($(TERMS_CLIENT_SKIP_DEP),true)
+dep:
+	@echo "skipping dep"
 else
-deps:
-	@echo "Skipping godeps. export MAKE_GODEPS = true to enable."
+$(GOPATH)/bin/dep:
+	go get -u github.com/golang/dep/cmd/dep
+
+# populate vendor/ from Gopkg.lock without updating it first (lock file is the single source of truth for machine).
+dep: $(GOPATH)/bin/dep
+	$(GOPATH)/bin/dep ensure -vendor-only $(verbose)
 endif
 
-build: deps
+# update Gopkg.lock (if needed), but do not update `vendor/`.
+rebuild-dependencies:
+	dep ensure -v -no-vendor $(dep-update)
+
+build: dep
 	GOBIN=$(GOBIN) go build -a $(PROJECT)/...
 
 install: deps
