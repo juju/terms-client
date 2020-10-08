@@ -51,7 +51,7 @@ type listTermsCommand struct {
 
 // SetFlags implements Command.SetFlags.
 func (c *listTermsCommand) SetFlags(f *gnuflag.FlagSet) {
-	c.out.AddFlags(f, "yaml", cmd.DefaultFormatters)
+	c.out.AddFlags(f, "yaml", cmd.DefaultFormatters.Formatters())
 	f.StringVar(&c.GroupList, "groups", "", "a comma separated list of additional groups")
 	f.StringVar(&c.IdentityURL, "identity-url", idmBaseURL(), "host and port of the identity service")
 	c.baseCommand.SetFlags(f)
