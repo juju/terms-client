@@ -7,10 +7,10 @@ import (
 	"context"
 	"strings"
 
+	"github.com/juju/charm/v8"
 	"github.com/juju/cmd"
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
-	"gopkg.in/juju/charm.v6"
 
 	"github.com/juju/terms-client/api"
 )
@@ -49,7 +49,7 @@ type pushTermCommand struct {
 
 // SetFlags implements Command.SetFlags.
 func (c *pushTermCommand) SetFlags(f *gnuflag.FlagSet) {
-	c.out.AddFlags(f, "yaml", cmd.DefaultFormatters)
+	c.out.AddFlags(f, "yaml", cmd.DefaultFormatters.Formatters())
 	c.baseCommand.SetFlags(f)
 }
 

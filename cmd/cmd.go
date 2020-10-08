@@ -8,14 +8,14 @@ import (
 	"os"
 	"path"
 
+	"github.com/canonical/candid/candidclient/ussologin"
 	"github.com/juju/cmd"
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
 	"github.com/juju/juju/juju/osenv"
-	"github.com/juju/persistent-cookiejar"
+	cookiejar "github.com/juju/persistent-cookiejar"
 	"github.com/juju/utils"
 	"gopkg.in/juju/environschema.v1/form"
-	"gopkg.in/juju/idmclient.v1/ussologin"
 	"gopkg.in/macaroon-bakery.v2/httpbakery"
 
 	"github.com/juju/terms-client/api"
