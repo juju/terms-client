@@ -1,22 +1,31 @@
-module github.com/juju/terms-client
+module github.com/juju/terms-client/v2
 
-go 1.15
+go 1.16
 
 require (
 	github.com/boltdb/bolt v1.3.1 // indirect
-	github.com/canonical/candid v1.4.3
+	github.com/frankban/quicktest v1.11.3 // indirect
+	github.com/go-macaroon-bakery/macaroon-bakery/v3 v3.0.0-20210302105820-5587392d1f47
+	github.com/google/uuid v1.2.0 // indirect
+	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a // indirect
 	github.com/juju/charm/v8 v8.0.0-20200925053015-07d39c0154ac
 	github.com/juju/cmd v0.0.0-20200108104440-8e43f3faa5c9
 	github.com/juju/errors v0.0.0-20200330140219-3fe23663418f
 	github.com/juju/gnuflag v0.0.0-20171113085948-2ce1bb71843d
+	github.com/juju/idmclient/v2 v2.0.0-20210302223040-11b8c31099a6
 	github.com/juju/juju v0.0.0-20201007080928-1f35f6a20b57
 	github.com/juju/persistent-cookiejar v0.0.0-20170428161559-d67418f14c93
 	github.com/juju/testing v0.0.0-20200923013621-75df6121fbb0
-	github.com/juju/utils v0.0.0-20200604140309-9d78121a29e0
-	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b
+	github.com/juju/usso v1.0.1 // indirect
+	github.com/juju/utils/v2 v2.0.0-20200923005554-4646bfea2ef1
+	github.com/julienschmidt/httprouter v1.3.0 // indirect
+	github.com/prometheus/client_golang v1.5.1 // indirect
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 	gopkg.in/juju/environschema.v1 v1.0.0
-	gopkg.in/macaroon-bakery.v2 v2.2.0
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/retry.v1 v1.0.3 // indirect
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 // Needed for github.com/juju/juju

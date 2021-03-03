@@ -1,7 +1,7 @@
 # Copyright 2016 Canonical Ltd.
 # Licensed under the GPLv3, see LICENCE file for details.
 #
-PROJECT := github.com/juju/terms-client
+PROJECT := github.com/juju/terms-client/v2
 
 ifndef GOBIN
 GOBIN := $(shell mkdir -p $(GOPATH)/bin; realpath $(GOPATH))/bin

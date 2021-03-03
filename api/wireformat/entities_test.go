@@ -12,7 +12,7 @@ import (
 	gc "gopkg.in/check.v1"
 	"gopkg.in/yaml.v2"
 
-	"github.com/juju/terms-client/api/wireformat"
+	"github.com/juju/terms-client/v2/api/wireformat"
 )
 
 func Test(t *stdtesting.T) {

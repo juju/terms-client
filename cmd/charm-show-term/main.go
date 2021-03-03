@@ -8,7 +8,7 @@ import (
 
 	"github.com/juju/cmd"
 
-	tcmd "github.com/juju/terms-client/cmd"
+	tcmd "github.com/juju/terms-client/v2/cmd"
 )
 
 func main() {

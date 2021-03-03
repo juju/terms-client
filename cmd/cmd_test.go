@@ -9,16 +9,16 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/go-macaroon-bakery/macaroon-bakery/v3/httpbakery"
 	"github.com/juju/cmd/cmdtesting"
 	"github.com/juju/errors"
 	jujutesting "github.com/juju/testing"
 	jc "github.com/juju/testing/checkers"
 	gc "gopkg.in/check.v1"
-	"gopkg.in/macaroon-bakery.v2/httpbakery"
 
-	"github.com/juju/terms-client/api"
-	"github.com/juju/terms-client/api/wireformat"
-	"github.com/juju/terms-client/cmd"
+	"github.com/juju/terms-client/v2/api"
+	"github.com/juju/terms-client/v2/api/wireformat"
+	"github.com/juju/terms-client/v2/cmd"
 )
 
 func TestPackage(t *testing.T) {

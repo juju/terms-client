@@ -12,7 +12,7 @@ import (
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
 
-	"github.com/juju/terms-client/api"
+	"github.com/juju/terms-client/v2/api"
 )
 
 const showTermDoc = `
