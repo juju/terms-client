@@ -12,7 +12,7 @@ import (
 	"github.com/juju/testing"
 	jc "github.com/juju/testing/checkers"
 
-	"github.com/juju/terms-client/cmd"
+	"github.com/juju/terms-client/v2/cmd"
 )
 
 type baseCommandSuite struct {
