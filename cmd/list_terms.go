@@ -12,10 +12,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/go-macaroon-bakery/macaroon-bakery/v3/httpbakery"
 	"github.com/juju/cmd"
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
+	"gopkg.in/macaroon-bakery.v3/httpbakery"
 
 	"github.com/juju/terms-client/v2/api"
 )

@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/go-macaroon-bakery/macaroon-bakery/v3/httpbakery"
 	"github.com/juju/cmd"
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
@@ -17,6 +16,7 @@ import (
 	cookiejar "github.com/juju/persistent-cookiejar"
 	"github.com/juju/utils/v2"
 	"gopkg.in/juju/environschema.v1/form"
+	"gopkg.in/macaroon-bakery.v3/httpbakery"
 
 	"github.com/juju/terms-client/v2/api"
 )

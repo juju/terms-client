@@ -18,8 +18,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-macaroon-bakery/macaroon-bakery/v3/httpbakery"
 	"github.com/juju/errors"
+	"gopkg.in/macaroon-bakery.v3/httpbakery"
 
 	"github.com/juju/terms-client/v2/api/wireformat"
 )
