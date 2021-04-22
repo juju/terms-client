@@ -35,12 +35,12 @@ type commandSuite struct {
 	cleanup   func()
 }
 
-func (s *commandSuite) SetUpTest(c *gc.C) {
+func (s *commandSuite) SetUpTest(_ *gc.C) {
 	s.client = &mockClient{}
 	s.idmClient = &mockIDMClient{
 		username: "test-user",
 		groups: map[string][]string{
-			"test-user": []string{"test-user"},
+			"test-user": {"test-user"},
 		},
 	}
 
@@ -62,7 +62,7 @@ func (s *commandSuite) SetUpTest(c *gc.C) {
 	}
 }
 
-func (s *commandSuite) TearDownTest(c *gc.C) {
+func (s *commandSuite) TearDownTest(_ *gc.C) {
 	s.cleanup()
 }
 
