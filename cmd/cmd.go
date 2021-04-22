@@ -13,7 +13,6 @@ import (
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
 	"github.com/juju/idmclient/v2/ussologin"
-	"github.com/juju/juju/juju/osenv"
 	cookiejar "github.com/juju/persistent-cookiejar"
 	"github.com/juju/utils/v2"
 	"gopkg.in/juju/environschema.v1/form"
@@ -38,18 +37,18 @@ type baseCommand struct {
 // NewClient returns a new http bakery client for terms commands
 // and a cleanup method that updates the stored cookie.
 func (s *baseCommand) NewClient(ctx *cmd.Context) (*httpbakery.Client, func(), error) {
-	jujuXDGDataHome := osenv.JujuXDGDataHomeDir()
+	jujuXDGDataHome := JujuXDGDataHomeDir()
 	if jujuXDGDataHome == "" {
 		return nil, func() {}, errors.Errorf("cannot determine juju data home, required environment variables are not set")
 	}
-	osenv.SetJujuXDGDataHome(jujuXDGDataHome)
+	SetJujuXDGDataHome(jujuXDGDataHome)
 	client := httpbakery.NewClient()
 	if s.NoBrowser {
 		filler := &form.IOFiller{
 			In:  os.Stdin,
 			Out: os.Stdout,
 		}
-		store := ussologin.NewFileTokenStore(osenv.JujuXDGDataHomePath("store-usso-token"))
+		store := ussologin.NewFileTokenStore(JujuXDGDataHomePath("store-usso-token"))
 		interactor := ussologin.NewInteractor(ussologin.StoreTokenGetter{
 			Store: store,
 			TokenGetter: ussologin.FormTokenGetter{
