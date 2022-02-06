@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/juju/cmd"
+	"github.com/juju/cmd/v3"
 
 	tcmd "github.com/juju/terms-client/v2/cmd"
 )

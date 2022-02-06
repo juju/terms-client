@@ -9,12 +9,12 @@ import (
 	"path"
 
 	"github.com/go-macaroon-bakery/macaroon-bakery/v3/httpbakery"
-	"github.com/juju/cmd"
+	"github.com/juju/cmd/v3"
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
 	"github.com/juju/idmclient/v2/ussologin"
 	cookiejar "github.com/juju/persistent-cookiejar"
-	"github.com/juju/utils/v2"
+	"github.com/juju/utils/v3"
 	"gopkg.in/juju/environschema.v1/form"
 
 	"github.com/juju/terms-client/v2/api"

@@ -6,8 +6,8 @@ package cmd_test
 import (
 	gc "gopkg.in/check.v1"
 
-	jujucmd "github.com/juju/cmd"
-	"github.com/juju/cmd/cmdtesting"
+	jujucmd "github.com/juju/cmd/v3"
+	"github.com/juju/cmd/v3/cmdtesting"
 	"github.com/juju/gnuflag"
 	"github.com/juju/testing"
 	jc "github.com/juju/testing/checkers"
@@ -28,6 +28,18 @@ func newTestCommand() *testCommand {
 
 type testCommand struct {
 	cmd.BaseCommand
+}
+
+func (c *testCommand) IsSuperCommand() bool {
+	return false
+}
+
+func (c *testCommand) Init(args []string) error {
+	return nil
+}
+
+func (c *testCommand) AllowInterspersedFlags() bool {
+	return false
 }
 
 func (c *testCommand) Info() *jujucmd.Info {

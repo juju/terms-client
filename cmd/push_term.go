@@ -7,8 +7,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/juju/charm/v9"
-	"github.com/juju/cmd"
+	"github.com/juju/cmd/v3"
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
 
@@ -87,7 +86,7 @@ func (c *pushTermCommand) Description() string {
 
 // Run implements Command.Run.
 func (c *pushTermCommand) Run(ctx *cmd.Context) error {
-	termid, err := charm.ParseTerm(c.TermID)
+	termid, err := ParseTerm(c.TermID)
 	if err != nil {
 		return errors.Annotatef(err, "invalid term id argument")
 	}
