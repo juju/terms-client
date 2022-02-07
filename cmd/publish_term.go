@@ -7,8 +7,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/juju/charm/v9"
-	"github.com/juju/cmd"
+	"github.com/juju/cmd/v3"
 	"github.com/juju/errors"
 	"github.com/juju/gnuflag"
 
@@ -83,7 +82,7 @@ func (c *releaseTermCommand) Run(ctx *cmd.Context) error {
 		return errors.Trace(err)
 	}
 
-	termsId, err := charm.ParseTerm(c.TermID)
+	termsId, err := ParseTerm(c.TermID)
 	if err != nil {
 		return errors.Annotate(err, "invalid term format")
 	}

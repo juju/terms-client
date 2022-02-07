@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/juju/utils/v2"
+	"github.com/juju/utils/v3"
 )
 
 // This file is copied from Juju to avoid the need to import juju itself.
@@ -17,7 +17,7 @@ import (
 const (
 	// JujuXDGDataHomeEnvKey is used to override the default
 	// XDG Data Home location.
-	JujuXDGDataHomeEnvKey   = "JUJU_DATA"
+	JujuXDGDataHomeEnvKey = "JUJU_DATA"
 
 	// XDGDataHome is a path where data for the running user
 	// should be stored according to the xdg standard.
